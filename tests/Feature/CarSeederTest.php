@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Car;
+use App\Models\CarStatus;
 use Database\Seeders\CarSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -44,18 +45,29 @@ function fakeWikipediaApi(): void
     ]);
 }
 
-it('gives every seeded car a credited picture', function () {
+it('seeds fifty cars', function () {
     fakeWikipediaApi();
 
     $this->seed(CarSeeder::class);
 
-    expect(Car::count())->toBeGreaterThanOrEqual(25)
-        ->and(Car::whereNull('photo_url')->count())->toBe(0)
-        ->and(Car::first())
+    expect(Car::count())->toBe(50);
+});
+
+it('gives every seeded car with a model photo a credited picture', function () {
+    fakeWikipediaApi();
+
+    $this->seed(CarSeeder::class);
+
+    $withPhoto = Car::whereNotNull('photo_url')->get();
+
+    expect($withPhoto->count())->toBeGreaterThanOrEqual(40);
+
+    $withPhoto->each(fn (Car $car) => expect($car)
         ->photo_url->toStartWith('https://upload.wikimedia.org/')
+        ->photo_source_url->toStartWith('https://commons.wikimedia.org/')
         ->photo_author->toBe('Jane Doe')
         ->photo_licence->toBe('CC BY-SA 4.0')
-        ->photo_attribution_required->toBeTrue();
+        ->photo_attribution_required->toBeTrue());
 });
 
 it('still seeds the cars without pictures when Wikipedia is unavailable', function () {
@@ -64,7 +76,7 @@ it('still seeds the cars without pictures when Wikipedia is unavailable', functi
 
     $this->seed(CarSeeder::class);
 
-    expect(Car::count())->toBeGreaterThanOrEqual(25)
+    expect(Car::count())->toBe(50)
         ->and(Car::whereNotNull('photo_url')->count())->toBe(0);
 });
 
@@ -75,4 +87,57 @@ it('gives every seeded car its own stock number and received date', function () 
 
     expect(Car::distinct()->count('stock_number'))->toBe(Car::count())
         ->and(Car::whereNull('received_on')->count())->toBe(0);
+});
+
+it('seeds mostly available cars, with a few on hold and a few sold', function () {
+    fakeWikipediaApi();
+
+    $this->seed(CarSeeder::class);
+
+    $countByStatus = Car::all()->countBy(fn (Car $car) => $car->status->value);
+
+    expect($countByStatus['available'])->toBeGreaterThanOrEqual(30)
+        ->and($countByStatus['on_hold'])->toBeBetween(3, 10)
+        ->and($countByStatus['sold'])->toBeBetween(3, 10);
+});
+
+it('dates the sale of every sold car, and only of sold cars', function () {
+    fakeWikipediaApi();
+
+    $this->seed(CarSeeder::class);
+
+    expect(Car::where('status', CarStatus::Sold)->whereNull('sold_on')->count())->toBe(0)
+        ->and(Car::where('status', '!=', CarStatus::Sold)->whereNotNull('sold_on')->count())->toBe(0)
+        ->and(Car::whereColumn('sold_on', '<', 'received_on')->count())->toBe(0);
+});
+
+it('leaves a few gaps in the seeded data, like a real inventory', function (string $column) {
+    fakeWikipediaApi();
+
+    $this->seed(CarSeeder::class);
+
+    expect(Car::whereNull($column)->count())->toBeBetween(2, 8);
+})->with([
+    'no photo' => 'photo_url',
+    'no price' => 'price',
+    'no description' => 'description',
+    'no colour' => 'colour',
+]);
+
+it('seeds prices and mileages that are believable for the age of each car', function () {
+    $this->travelTo('2026-11-10');
+    fakeWikipediaApi();
+
+    $this->seed(CarSeeder::class);
+
+    Car::all()->each(function (Car $car) {
+        $ageInYears = max(1, 2026 - $car->year + 1);
+
+        expect($car->year)->toBeBetween(2012, 2026)
+            ->and($car->mileage_km / $ageInYears)->toBeBetween(1_000, 28_000, "{$car->year} {$car->make} {$car->model}: {$car->mileage_km} km");
+
+        if ($car->price !== null) {
+            expect($car->price)->toBeBetween(5_000, 90_000, "{$car->year} {$car->make} {$car->model}: \${$car->price}");
+        }
+    });
 });

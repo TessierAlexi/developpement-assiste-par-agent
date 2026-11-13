@@ -74,6 +74,18 @@ class CarFactory extends Factory
     }
 
     /**
+     * Indicate that the car has no price, colour, description or photo yet.
+     */
+    public function withMissingDetails(): static
+    {
+        return $this->withoutPhoto()->state(fn (array $attributes) => [
+            'price' => null,
+            'colour' => null,
+            'description' => null,
+        ]);
+    }
+
+    /**
      * Indicate that a customer has put the car on hold.
      */
     public function onHold(): static

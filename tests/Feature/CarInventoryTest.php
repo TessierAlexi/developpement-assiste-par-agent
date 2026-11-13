@@ -150,6 +150,21 @@ describe('index', function () {
             );
     });
 
+    it('lists a car that has no price or photo without inventing values', function () {
+        $car = Car::factory()->withMissingDetails()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Cars/Index')
+                ->has('cars.data', 1)
+                ->where('cars.data.0.id', $car->id)
+                ->where('cars.data.0.price', null)
+                ->where('cars.data.0.photo_url', null)
+            );
+    });
+
     it('lists every car when the status filter is unknown', function () {
         Car::factory()->create();
         Car::factory()->sold()->create();
@@ -204,6 +219,23 @@ describe('show', function () {
             );
     });
 
+    it('shows a car that has no price, colour, description or photo', function () {
+        $car = Car::factory()->withMissingDetails()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Cars/Show')
+                ->where('car.id', $car->id)
+                ->where('car.price', null)
+                ->where('car.colour', null)
+                ->where('car.description', null)
+                ->where('car.photo_url', null)
+                ->where('car.photo_attribution_required', false)
+            );
+    });
+
     it('returns 404 for an unknown car', function () {
         $this->actingAs(User::factory()->create())
             ->get(route('cars.show', 999999))
@@ -243,14 +275,26 @@ describe('store', function () {
             ->sold_on->toBeNull();
     });
 
+    it('adds a car whose price and colour are not known yet', function () {
+        $this->actingAs(User::factory()->create())
+            ->post(route('cars.store'), carFormPayload(['price' => '', 'colour' => '', 'description' => '']))
+            ->assertRedirect(route('cars.show', Car::sole()));
+
+        expect(Car::sole())
+            ->price->toBeNull()
+            ->colour->toBeNull()
+            ->description->toBeNull();
+    });
+
     it('rejects a car with missing details', function () {
         $this->actingAs(User::factory()->create())
             ->post(route('cars.store'), [])
             ->assertSessionHasErrors([
                 'stock_number' => 'The stock number field is required.',
                 'received_on', 'year', 'make', 'model', 'trim', 'body_type',
-                'fuel_type', 'transmission', 'colour', 'mileage_km', 'price',
-            ]);
+                'fuel_type', 'transmission', 'mileage_km',
+            ])
+            ->assertSessionDoesntHaveErrors(['colour', 'price']);
 
         expect(Car::count())->toBe(0);
     });
@@ -308,6 +352,19 @@ describe('update', function () {
             ->stock_number->toBe('STK-2042')
             ->price->toBe(29_900)
             ->model->toBe('Civic');
+    });
+
+    it('saves the other details of a car that still has no price or colour', function () {
+        $car = Car::factory()->withMissingDetails()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('cars.update', $car), carFormPayload(['price' => '', 'colour' => '', 'mileage_km' => 36_000]))
+            ->assertRedirect(route('cars.show', $car));
+
+        expect($car->refresh())
+            ->mileage_km->toBe(36_000)
+            ->price->toBeNull()
+            ->colour->toBeNull();
     });
 
     it('does not change the status through the edit form', function () {

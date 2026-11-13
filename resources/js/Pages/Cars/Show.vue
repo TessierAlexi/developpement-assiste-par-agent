@@ -8,7 +8,7 @@ import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { carTitle, formatDate, formatMileage, formatPrice } from '@/formatters';
+import { carTitle, formatDate, formatMileage, formatPrice, formatText } from '@/formatters';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -53,7 +53,7 @@ const specifications = computed(() => [
     ['Body type', props.car.body_type],
     ['Fuel', props.car.fuel_type],
     ['Transmission', props.car.transmission],
-    ['Colour', props.car.colour],
+    ['Colour', formatText(props.car.colour)],
     ['Mileage', formatMileage(props.car.mileage_km)],
 ]);
 </script>
@@ -154,6 +154,9 @@ const specifications = computed(() => [
 
                     <p v-if="car.description" class="text-gray-700">
                         {{ car.description }}
+                    </p>
+                    <p v-else class="text-sm italic text-gray-500">
+                        No description provided.
                     </p>
                 </section>
             </div>
