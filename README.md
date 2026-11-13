@@ -56,6 +56,20 @@ Lors de la préparation, chaque prompt a pris de 4 à 9 minutes à un agent qui 
 
 Le prompt 7 a été simplifié après la préparation : il n'a pas été roulé tel quel.
 
+## Le projet complet
+
+La branche `projet-complet` contient l'application finale, après les 8 prompts : 259 tests Pest et 52 tests Vitest. Le tag `demo-complete` pointe sur la même version.
+
+```bash
+git switch projet-complet
+./vendor/bin/sail artisan migrate:fresh --seed
+./vendor/bin/sail npm run build        # ou garde `npm run dev` ouvert
+```
+
+Une seule retouche a été faite après les prompts : les classes ont été rangées dans `app/Services`, `app/Enums`, `app/Exceptions` et `app/Support` (les agents les avaient toutes mises dans `app/Models`).
+
+Pour revenir au projet de départ : `git switch main`, puis `migrate:fresh --seed` et `npm run build`.
+
 ## Recommencer
 
 ```bash
