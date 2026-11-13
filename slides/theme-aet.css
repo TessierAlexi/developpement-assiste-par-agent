@@ -1,0 +1,136 @@
+/* @theme aet */
+/* AET palette, same as build_deck.py: navy / orange / warm light */
+@import 'default';
+
+:root {
+  --navy: #0b2a4a;
+  --accent: #e86a33;
+  --light: #f4f1ec;
+  --grey: #4a4a4a;
+  --soft: #b8c4d0;
+}
+
+section {
+  width: 1280px;
+  height: 720px;
+  padding: 48px 64px 56px 72px;
+  background: var(--light);
+  color: var(--grey);
+  font-family: Calibri, Carlito, Arial, sans-serif;
+  font-size: 21px;
+  line-height: 1.35;
+  justify-content: flex-start;
+}
+
+section h2 {
+  color: var(--navy);
+  font-size: 38px;
+  margin: 0 0 18px;
+}
+
+section h3 {
+  color: var(--accent);
+  font-size: 20px;
+  margin: 10px 0 6px;
+}
+
+section strong { color: var(--navy); }
+section p, section li { margin: 6px 0; }
+section ul, section ol { padding-left: 1.2em; }
+
+section blockquote {
+  background: #fff;
+  border: 1px solid var(--soft);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin: 6px 0;
+  color: var(--navy);
+  font-style: italic;
+}
+section blockquote::before, section blockquote::after { content: none; }
+
+section pre {
+  background: var(--navy);
+  border-radius: 10px;
+  font-size: 15px;
+  margin: 6px 0;
+}
+section pre code, section pre code * { color: #f4f1ec; background: transparent; }
+section pre code .hljs-string { color: #ffc29e; }
+section pre code .hljs-keyword, section pre code .hljs-built_in { color: #9fd3ff; }
+section pre code .hljs-variable { color: #ffe08a; }
+section :not(pre) > code { background: #e6e1d8; color: var(--navy); border-radius: 4px; padding: 0 4px; }
+
+section table { font-size: 17px; border-collapse: collapse; width: 100%; display: table; }
+section.steps > p { margin-bottom: 14px; }
+section.lead > p:last-of-type { font-size: 14px; }
+section th { background: var(--navy); color: #fff; }
+section td, section th { border: 1px solid var(--soft); padding: 4px 10px; }
+section tr:nth-child(even) td { background: #fff; }
+
+section footer { color: var(--grey); font-size: 12px; left: 72px; }
+section::after { color: var(--grey); font-size: 12px; }
+
+/* Two columns, each a white card */
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.column {
+  background: #fff;
+  border: 1px solid var(--soft);
+  border-radius: 12px;
+  padding: 10px 20px;
+}
+
+/* Numbered steps rendered as cards */
+section.steps ol { list-style: none; padding: 0; counter-reset: step; display: grid; gap: 10px; }
+section.steps ol li {
+  counter-increment: step;
+  background: #fff;
+  border: 1px solid var(--soft);
+  border-radius: 12px;
+  padding: 10px 16px 10px 64px;
+  position: relative;
+  margin: 0;
+}
+section.steps ol li::before {
+  content: counter(step);
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); color: #fff; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Dark cover / divider / closing */
+section.lead {
+  background: var(--navy);
+  color: var(--soft);
+  justify-content: center;
+}
+section.lead h1 { color: #fff; font-size: 56px; margin: 0; }
+section.lead h2 { color: var(--accent); font-size: 30px; margin: 4px 0 18px; }
+section.lead strong { color: #fff; }
+section.lead blockquote { background: transparent; border-color: var(--accent); color: #fff; font-size: 24px; }
+section.lead ol li { margin: 8px 0; }
+
+/* Partner logos on the cover (bottom right) */
+section .cover-logos { position: absolute; right: 64px; bottom: 36px; display: flex; gap: 40px; align-items: center; }
+section .cover-logos img { display: block; }
+section .cover-logos .aet { height: 62px; }
+section .cover-logos .troisw { height: 84px; }
+section .cover-logos .vuemtl { height: 64px; }
+
+/* Red / green / refactor as three coloured cards (same look as the original English deck) */
+section.tdd ol { list-style: none; padding: 0; margin: 22px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+section.tdd ol li { margin: 0; border-radius: 16px; padding: 22px 26px 26px; min-height: 210px; color: #fff; text-align: center; font-size: 19px; line-height: 1.4; }
+section.tdd ol li:nth-child(1) { background: #c0392b; }
+section.tdd ol li:nth-child(2) { background: #2e864e; }
+section.tdd ol li:nth-child(3) { background: var(--navy); }
+section.tdd ol li strong { display: inline-block; color: #fff; font-size: 30px; margin-bottom: 14px; }
+section.tdd ol li em { color: #fff; }
+section.tdd ol ~ p { font-size: 17px; text-align: center; }
+
+/* Context slide: same cards, one colour per source of context */
+section.ctx ol li:nth-child(1) { background: var(--navy); }
+section.ctx ol li:nth-child(2) { background: #b04a1f; }
+section.ctx ol li:nth-child(3) { background: #2e864e; }
+section.ctx ol li strong { font-size: 22px; letter-spacing: .5px; }
+section.ctx ol li { font-size: 17.5px; }
