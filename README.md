@@ -70,6 +70,30 @@ Une seule retouche a été faite après les prompts : les classes ont été rang
 
 Pour revenir au projet de départ : `git switch main`, puis `migrate:fresh --seed` et `npm run build`.
 
+## Étape par étape
+
+La branche `etape-par-etape` montre l'application au fil des prompts, comme la diapositive « Démo 5 » : un commit par prompt, chacun avec un tag.
+
+| Tag | Après le prompt | Tests Pest |
+|---|---|---|
+| `etape-1` | 1 · Page des voitures avec recherche et photos | 34 |
+| `etape-2` | 2 · Système d'inventaire en TDD | 68 |
+| `etape-3` | 3 · 50 véhicules réalistes, avec des trous voulus | 80 |
+| `etape-4` | 4 · Page d'édition complète, formulaire partagé | 131 |
+| `etape-5` | 5 · 7 onglets, dont l'équipement et l'historique | 168 |
+| `etape-6` | 6 · Tableau de bord avec jauges | 183 |
+| `etape-7` | 7 · Rappels de sécurité (API publique de la NHTSA) | 225 |
+| `etape-8` | 8 · Données d'exemple complètes | 259 |
+
+```bash
+git switch --detach etape-3                    # l'application après le prompt 3
+git diff etape-2 etape-3 -- app resources tests # ce que le prompt 3 a changé
+./vendor/bin/sail artisan migrate:fresh --seed
+./vendor/bin/sail npm run build
+```
+
+Le dernier commit de la branche est le rangement des classes ; il donne le même code que `projet-complet`.
+
 ## Recommencer
 
 ```bash
