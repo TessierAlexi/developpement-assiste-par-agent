@@ -23,3 +23,11 @@ it('rejects a VIN', function (string $vin) {
     'with the wrong check digit' => '1HGCM82643A004352',
     'with two characters swapped' => '1HGCM82633A004325',
 ]);
+
+it('completes a VIN with the check digit that makes it valid', function (string $vin, string $completed) {
+    expect(Vin::withCheckDigit($vin))->toBe($completed);
+})->with([
+    'a numeric check digit' => ['1HGCM826_3A004352', '1HGCM82633A004352'],
+    'an X check digit' => ['1M8GDM9A0KP042788', '1M8GDM9AXKP042788'],
+    'a check digit that is already right' => ['1HGCM82633A004352', '1HGCM82633A004352'],
+]);

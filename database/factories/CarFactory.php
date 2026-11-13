@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Car;
 use App\Models\CarStatus;
 use App\Models\Drivetrain;
+use App\Models\Vin;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -26,7 +27,8 @@ class CarFactory extends Factory
     ];
 
     /**
-     * Define the model's default state.
+     * Define the model's default state. The VIN is made up, yet valid: 17 allowed
+     * characters with the right check digit.
      *
      * @return array<string, mixed>
      */
@@ -36,7 +38,7 @@ class CarFactory extends Factory
 
         return [
             'stock_number' => fake()->unique()->bothify('STK-#####'),
-            'vin' => null,
+            'vin' => Vin::withCheckDigit(fake()->unique()->regexify('[A-HJ-NPR-Z0-9]{'.Vin::LENGTH.'}')),
             'status' => CarStatus::Available,
             'received_on' => fake()->dateTimeBetween('-120 days', '-1 day')->format('Y-m-d'),
             'sold_on' => null,
@@ -72,7 +74,7 @@ class CarFactory extends Factory
     }
 
     /**
-     * Indicate that the technical details of the car have been entered, apart from its VIN.
+     * Indicate that the technical details of the car have been entered.
      */
     public function withTechnicalDetails(): static
     {

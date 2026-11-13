@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CarController;
+use App\Http\Controllers\CarRecallController;
 use App\Http\Controllers\CarStatusController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
@@ -23,6 +24,9 @@ Route::get('/dashboard', DashboardController::class)
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('cars', CarController::class);
+    Route::get('/cars/{car}/recalls', [CarRecallController::class, 'show'])
+        ->middleware('throttle:recalls')
+        ->name('cars.recalls');
     Route::patch('/cars/{car}/status', [CarStatusController::class, 'update'])->name('cars.status.update');
 });
 

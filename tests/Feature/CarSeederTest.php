@@ -2,6 +2,7 @@
 
 use App\Models\Car;
 use App\Models\CarStatus;
+use App\Models\Vin;
 use Database\Seeders\CarSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -87,6 +88,18 @@ it('gives every seeded car its own stock number and received date', function () 
 
     expect(Car::distinct()->count('stock_number'))->toBe(Car::count())
         ->and(Car::whereNull('received_on')->count())->toBe(0);
+});
+
+it('gives every seeded car a valid VIN of its own, never leaving it out', function () {
+    fakeWikipediaApi();
+
+    $this->seed(CarSeeder::class);
+
+    $vins = Car::pluck('vin');
+
+    expect($vins->filter()->unique())->toHaveCount(50);
+
+    $vins->each(fn (?string $vin) => expect(Vin::isValid((string) $vin))->toBeTrue("'{$vin}' is not a valid VIN"));
 });
 
 it('seeds mostly available cars, with a few on hold and a few sold', function () {

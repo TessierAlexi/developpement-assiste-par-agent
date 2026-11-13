@@ -7,10 +7,8 @@ use App\Models\CarEquipment;
 use App\Models\CarStatus;
 use App\Models\Drivetrain;
 use App\Models\Vin;
-use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
@@ -24,7 +22,7 @@ class CarRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if (is_string($this->input('vin'))) {
-            $this->merge(['vin' => Str::upper(trim($this->input('vin')))]);
+            $this->merge(['vin' => Vin::normalise($this->input('vin'))]);
         }
     }
 
@@ -42,11 +40,7 @@ class CarRequest extends FormRequest
             ],
             'vin' => [
                 'nullable', 'string',
-                function (string $attribute, mixed $value, Closure $fail): void {
-                    if (! is_string($value) || ! Vin::isValid($value)) {
-                        $fail('The VIN must be '.Vin::LENGTH.' characters, without I, O or Q, and have a valid check digit.');
-                    }
-                },
+                Vin::rule(),
                 Rule::unique(Car::class)->ignore($this->route('car')),
             ],
             'status' => ['required', Rule::enum(CarStatus::class)],

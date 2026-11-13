@@ -330,14 +330,14 @@ describe('car form', function () {
 
     it('rejects a VIN already used by another car', function (string $method, string $routeName) {
         Car::factory()->create(['vin' => '1M8GDM9AXKP042788']);
-        $car = Car::factory()->create(['stock_number' => 'STK-0001']);
+        $car = Car::factory()->create(['stock_number' => 'STK-0001', 'vin' => '1HGCM82633A004352']);
 
         $this->actingAs(User::factory()->create())
             ->{$method}(route($routeName, $car), carFormPayload(['vin' => '1M8GDM9AXKP042788']))
             ->assertSessionHasErrors(['vin' => 'The VIN has already been taken.']);
 
         expect(Car::count())->toBe(2)
-            ->and($car->refresh()->vin)->toBeNull();
+            ->and($car->refresh()->vin)->toBe('1HGCM82633A004352');
     })->with([
         'adding' => ['post', 'cars.store'],
         'editing' => ['put', 'cars.update'],

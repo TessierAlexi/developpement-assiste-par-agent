@@ -1,6 +1,7 @@
 <script setup>
 import CarPhoto from '@/Components/CarPhoto.vue';
 import CarPhotoCredit from '@/Components/CarPhotoCredit.vue';
+import CarRecalls from '@/Components/CarRecalls.vue';
 import CarStatusBadge from '@/Components/CarStatusBadge.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import InputError from '@/Components/InputError.vue';
@@ -161,60 +162,64 @@ const pricing = computed(() => [
                     @update:model-value="showTab"
                 >
                     <template #overview>
-                        <div class="grid gap-6 lg:grid-cols-5">
-                            <figure class="overflow-hidden bg-white shadow-sm sm:rounded-lg lg:col-span-3">
-                                <CarPhoto :src="car.photo_url" :alt="photoAlt" class="aspect-[4/3]" />
-                                <CarPhotoCredit v-if="hasPhotoCredit" :car="car" />
-                            </figure>
+                        <div class="space-y-6">
+                            <div class="grid gap-6 lg:grid-cols-5">
+                                <figure class="overflow-hidden bg-white shadow-sm sm:rounded-lg lg:col-span-3">
+                                    <CarPhoto :src="car.photo_url" :alt="photoAlt" class="aspect-[4/3]" />
+                                    <CarPhotoCredit v-if="hasPhotoCredit" :car="car" />
+                                </figure>
 
-                            <section class="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg lg:col-span-2">
-                                <div class="flex items-center justify-between gap-4">
-                                    <p class="text-3xl font-semibold text-indigo-600">
-                                        {{ formatPrice(car.price) }}
-                                    </p>
-                                    <CarStatusBadge :status="car.status" />
-                                </div>
+                                <section class="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg lg:col-span-2">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <p class="text-3xl font-semibold text-indigo-600">
+                                            {{ formatPrice(car.price) }}
+                                        </p>
+                                        <CarStatusBadge :status="car.status" />
+                                    </div>
 
-                                <form class="flex items-end gap-2" @submit.prevent="changeStatus">
-                                    <div class="flex-1">
-                                        <InputLabel for="status" value="Status" />
-                                        <select
-                                            id="status"
-                                            v-model="statusForm.status"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    <form class="flex items-end gap-2" @submit.prevent="changeStatus">
+                                        <div class="flex-1">
+                                            <InputLabel for="status" value="Status" />
+                                            <select
+                                                id="status"
+                                                v-model="statusForm.status"
+                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            >
+                                                <option v-for="option in statuses" :key="option.value" :value="option.value">
+                                                    {{ option.label }}
+                                                </option>
+                                            </select>
+                                            <InputError :message="statusForm.errors.status" class="mt-2" />
+                                        </div>
+                                        <PrimaryButton
+                                            :class="{ 'opacity-25': statusForm.processing }"
+                                            :disabled="statusForm.processing || statusForm.status === car.status"
                                         >
-                                            <option v-for="option in statuses" :key="option.value" :value="option.value">
-                                                {{ option.label }}
-                                            </option>
-                                        </select>
-                                        <InputError :message="statusForm.errors.status" class="mt-2" />
-                                    </div>
-                                    <PrimaryButton
-                                        :class="{ 'opacity-25': statusForm.processing }"
-                                        :disabled="statusForm.processing || statusForm.status === car.status"
-                                    >
-                                        Update status
-                                    </PrimaryButton>
-                                </form>
+                                            Update status
+                                        </PrimaryButton>
+                                    </form>
 
-                                <dl class="divide-y divide-gray-100">
-                                    <div
-                                        v-for="[label, value] in highlights"
-                                        :key="label"
-                                        class="flex justify-between py-2 text-sm"
-                                    >
-                                        <dt class="text-gray-500">{{ label }}</dt>
-                                        <dd class="font-medium text-gray-900">{{ value }}</dd>
-                                    </div>
-                                </dl>
+                                    <dl class="divide-y divide-gray-100">
+                                        <div
+                                            v-for="[label, value] in highlights"
+                                            :key="label"
+                                            class="flex justify-between py-2 text-sm"
+                                        >
+                                            <dt class="text-gray-500">{{ label }}</dt>
+                                            <dd class="font-medium text-gray-900">{{ value }}</dd>
+                                        </div>
+                                    </dl>
 
-                                <p v-if="car.description" class="text-gray-700">
-                                    {{ car.description }}
-                                </p>
-                                <p v-else class="text-sm italic text-gray-500">
-                                    No description provided.
-                                </p>
-                            </section>
+                                    <p v-if="car.description" class="text-gray-700">
+                                        {{ car.description }}
+                                    </p>
+                                    <p v-else class="text-sm italic text-gray-500">
+                                        No description provided.
+                                    </p>
+                                </section>
+                            </div>
+
+                            <CarRecalls :car="car" />
                         </div>
                     </template>
 
