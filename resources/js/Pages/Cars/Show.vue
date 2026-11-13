@@ -8,7 +8,15 @@ import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { carTitle, formatDate, formatMileage, formatPrice, formatText } from '@/formatters';
+import {
+    carTitle,
+    formatConsumption,
+    formatDate,
+    formatDisplacement,
+    formatMileage,
+    formatPrice,
+    formatText,
+} from '@/formatters';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -46,15 +54,26 @@ const photoAlt = computed(() => `${props.car.make} ${props.car.model}`);
 
 const specifications = computed(() => [
     ['Stock number', props.car.stock_number],
+    ['VIN', formatText(props.car.vin)],
     ['Received on', formatDate(props.car.received_on)],
     ...(props.car.sold_on ? [['Sold on', formatDate(props.car.sold_on)]] : []),
     ['Year', props.car.year],
     ['Trim', props.car.trim],
     ['Body type', props.car.body_type],
-    ['Fuel', props.car.fuel_type],
-    ['Transmission', props.car.transmission],
-    ['Colour', formatText(props.car.colour)],
+    ['Doors', formatText(props.car.doors)],
+    ['Seats', formatText(props.car.seats)],
+    ['Exterior colour', formatText(props.car.colour)],
+    ['Interior colour', formatText(props.car.interior_colour)],
     ['Mileage', formatMileage(props.car.mileage_km)],
+    ['Engine', formatText(props.car.engine)],
+    ['Displacement', formatDisplacement(props.car.engine_displacement_l)],
+    ['Cylinders', formatText(props.car.cylinders)],
+    ['Transmission', props.car.transmission],
+    ['Drivetrain', formatText(props.car.drivetrain)],
+    ['Fuel', props.car.fuel_type],
+    ['City consumption', formatConsumption(props.car.city_l_per_100km)],
+    ['Highway consumption', formatConsumption(props.car.highway_l_per_100km)],
+    ['Cost price', formatPrice(props.car.cost_price)],
 ]);
 </script>
 
@@ -158,6 +177,11 @@ const specifications = computed(() => [
                     <p v-else class="text-sm italic text-gray-500">
                         No description provided.
                     </p>
+
+                    <div v-if="car.internal_notes" class="rounded-md bg-amber-50 p-4">
+                        <h3 class="text-sm font-medium text-amber-800">Internal notes</h3>
+                        <p class="mt-1 whitespace-pre-line text-sm text-amber-700">{{ car.internal_notes }}</p>
+                    </div>
                 </section>
             </div>
         </div>

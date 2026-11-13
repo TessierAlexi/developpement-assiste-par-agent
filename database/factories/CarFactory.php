@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Car;
 use App\Models\CarStatus;
+use App\Models\Drivetrain;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -35,6 +36,7 @@ class CarFactory extends Factory
 
         return [
             'stock_number' => fake()->unique()->bothify('STK-#####'),
+            'vin' => null,
             'status' => CarStatus::Available,
             'received_on' => fake()->dateTimeBetween('-120 days', '-1 day')->format('Y-m-d'),
             'sold_on' => null,
@@ -46,9 +48,20 @@ class CarFactory extends Factory
             'fuel_type' => fake()->randomElement(['Gasoline', 'Hybrid']),
             'transmission' => fake()->randomElement(['Automatic', 'Manual']),
             'colour' => fake()->randomElement(['White', 'Black', 'Silver', 'Blue', 'Red']),
+            'interior_colour' => null,
+            'engine' => null,
+            'engine_displacement_l' => null,
+            'cylinders' => null,
+            'drivetrain' => null,
+            'doors' => null,
+            'seats' => null,
+            'city_l_per_100km' => null,
+            'highway_l_per_100km' => null,
             'mileage_km' => fake()->numberBetween(0, 180_000),
             'price' => fake()->numberBetween(80, 600) * 100,
+            'cost_price' => null,
             'description' => fake()->sentence(12),
+            'internal_notes' => null,
             'photo_url' => 'https://upload.wikimedia.org/wikipedia/commons/'.fake()->uuid().'.jpg',
             'photo_source_url' => 'https://commons.wikimedia.org/wiki/File:'.fake()->uuid().'.jpg',
             'photo_author' => fake()->name(),
@@ -56,6 +69,26 @@ class CarFactory extends Factory
             'photo_licence_url' => 'https://creativecommons.org/licenses/by-sa/4.0',
             'photo_attribution_required' => true,
         ];
+    }
+
+    /**
+     * Indicate that the technical details of the car have been entered, apart from its VIN.
+     */
+    public function withTechnicalDetails(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'interior_colour' => fake()->randomElement(['Black cloth', 'Grey cloth', 'Black leather']),
+            'engine' => '2.0L I4',
+            'engine_displacement_l' => 2.0,
+            'cylinders' => 4,
+            'drivetrain' => fake()->randomElement(Drivetrain::cases()),
+            'doors' => 4,
+            'seats' => 5,
+            'city_l_per_100km' => fake()->randomFloat(1, 7, 12),
+            'highway_l_per_100km' => fake()->randomFloat(1, 5, 9),
+            'cost_price' => fake()->numberBetween(60, 400) * 100,
+            'internal_notes' => fake()->sentence(8),
+        ]);
     }
 
     /**

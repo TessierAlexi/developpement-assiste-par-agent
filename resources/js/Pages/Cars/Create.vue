@@ -8,6 +8,14 @@ defineProps({
         type: Object,
         required: true,
     },
+    statuses: {
+        type: Array,
+        required: true,
+    },
+    drivetrains: {
+        type: Array,
+        required: true,
+    },
 });
 </script>
 
@@ -24,6 +32,8 @@ defineProps({
         <div class="py-12">
             <div class="mx-auto max-w-4xl sm:px-6 lg:px-8">
                 <CarForm
+                    :statuses="statuses"
+                    :drivetrains="drivetrains"
                     :car="defaults"
                     method="post"
                     :action="route('cars.store')"

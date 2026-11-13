@@ -6,6 +6,7 @@ use App\Http\Requests\CarRequest;
 use App\Models\Car;
 use App\Models\CarInventoryService;
 use App\Models\CarStatus;
+use App\Models\Drivetrain;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -50,7 +51,11 @@ class CarController extends Controller
     public function create(): Response
     {
         return Inertia::render('Cars/Create', [
-            'defaults' => ['received_on' => today()->toDateString()],
+            'defaults' => [
+                'received_on' => today()->toDateString(),
+                'status' => CarStatus::Available->value,
+            ],
+            ...$this->formOptions(),
         ]);
     }
 
@@ -59,7 +64,7 @@ class CarController extends Controller
      */
     public function store(CarRequest $request): RedirectResponse
     {
-        $car = $this->inventory->add($request->validated());
+        $car = $this->inventory->add($request->details(), $request->status());
 
         return to_route('cars.show', $car);
     }
@@ -82,6 +87,7 @@ class CarController extends Controller
     {
         return Inertia::render('Cars/Edit', [
             'car' => $car,
+            ...$this->formOptions(),
         ]);
     }
 
@@ -90,7 +96,7 @@ class CarController extends Controller
      */
     public function update(CarRequest $request, Car $car): RedirectResponse
     {
-        $this->inventory->update($car, $request->validated());
+        $this->inventory->update($car, $request->details(), $request->status());
 
         return to_route('cars.show', $car);
     }
@@ -103,5 +109,18 @@ class CarController extends Controller
         $this->inventory->remove($car);
 
         return to_route('cars.index');
+    }
+
+    /**
+     * Get the choices offered by the selects of the add and edit forms.
+     *
+     * @return array{statuses: list<array{value: string, label: string}>, drivetrains: list<array{value: string, label: string}>}
+     */
+    protected function formOptions(): array
+    {
+        return [
+            'statuses' => CarStatus::options(),
+            'drivetrains' => Drivetrain::options(),
+        ];
     }
 }

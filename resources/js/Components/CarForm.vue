@@ -27,6 +27,14 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    statuses: {
+        type: Array,
+        required: true,
+    },
+    drivetrains: {
+        type: Array,
+        required: true,
+    },
 });
 
 const sections = [
@@ -34,6 +42,8 @@ const sections = [
         title: 'Inventory',
         fields: [
             { name: 'stock_number', label: 'Stock number', placeholder: 'e.g. STK-01042' },
+            { name: 'vin', label: 'VIN', placeholder: '17 characters', maxlength: 17, class: 'uppercase placeholder:normal-case' },
+            { name: 'status', label: 'Status', type: 'select', options: props.statuses, required: true },
             { name: 'received_on', label: 'Received on', type: 'date' },
         ],
     },
@@ -45,12 +55,38 @@ const sections = [
             { name: 'model', label: 'Model' },
             { name: 'trim', label: 'Trim' },
             { name: 'body_type', label: 'Body type' },
-            { name: 'fuel_type', label: 'Fuel' },
+            { name: 'mileage_km', label: 'Mileage (km)', type: 'number', min: 0 },
+            { name: 'doors', label: 'Doors', type: 'number', min: 2, max: 5 },
+            { name: 'seats', label: 'Seats', type: 'number', min: 1, max: 15 },
+            { name: 'colour', label: 'Exterior colour' },
+            { name: 'interior_colour', label: 'Interior colour' },
+        ],
+    },
+    {
+        title: 'Powertrain',
+        fields: [
+            { name: 'engine', label: 'Engine', placeholder: 'e.g. 2.0L I4 Turbo' },
+            { name: 'engine_displacement_l', label: 'Displacement (L)', type: 'number', min: 0.5, max: 10, step: 0.1 },
+            { name: 'cylinders', label: 'Cylinders', type: 'number', min: 2, max: 16 },
             { name: 'transmission', label: 'Transmission' },
-            { name: 'colour', label: 'Colour' },
-            { name: 'mileage_km', label: 'Mileage (km)', type: 'number' },
-            { name: 'price', label: 'Price (CAD)', type: 'number' },
+            { name: 'drivetrain', label: 'Drivetrain', type: 'select', options: props.drivetrains },
+            { name: 'fuel_type', label: 'Fuel' },
+            { name: 'city_l_per_100km', label: 'City consumption (L/100 km)', type: 'number', min: 1, max: 40, step: 0.1 },
+            { name: 'highway_l_per_100km', label: 'Highway consumption (L/100 km)', type: 'number', min: 1, max: 40, step: 0.1 },
+        ],
+    },
+    {
+        title: 'Pricing',
+        fields: [
+            { name: 'price', label: 'Asking price (CAD)', type: 'number', min: 0 },
+            { name: 'cost_price', label: 'Cost price (CAD)', type: 'number', min: 0 },
+        ],
+    },
+    {
+        title: 'Description and notes',
+        fields: [
             { name: 'description', label: 'Description', type: 'textarea' },
+            { name: 'internal_notes', label: 'Internal notes (staff only)', type: 'textarea' },
         ],
     },
     {
@@ -65,6 +101,8 @@ const sections = [
         ],
     },
 ];
+
+const nativeControlClass = 'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500';
 
 const initialValue = (field) => {
     const value = props.car[field.name];
@@ -88,7 +126,7 @@ const submit = () => {
 </script>
 
 <template>
-    <form class="space-y-6" @submit.prevent="submit">
+    <form class="space-y-6" novalidate @submit.prevent="submit">
         <section
             v-for="section in sections"
             :key="section.title"
@@ -113,15 +151,33 @@ const submit = () => {
                             :id="field.name"
                             v-model="form[field.name]"
                             rows="4"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            class="mt-1 block w-full"
+                            :class="nativeControlClass"
                         />
+                        <select
+                            v-else-if="field.type === 'select'"
+                            :id="field.name"
+                            v-model="form[field.name]"
+                            class="mt-1 block w-full"
+                            :class="nativeControlClass"
+                        >
+                            <option v-if="!field.required" value="">Not specified</option>
+                            <option v-for="option in field.options" :key="option.value" :value="option.value">
+                                {{ option.label }}
+                            </option>
+                        </select>
                         <TextInput
                             v-else
                             :id="field.name"
                             v-model="form[field.name]"
                             :type="field.type ?? 'text'"
                             :placeholder="field.placeholder"
+                            :min="field.min"
+                            :max="field.max"
+                            :step="field.step"
+                            :maxlength="field.maxlength"
                             class="mt-1 block w-full"
+                            :class="field.class"
                         />
                     </template>
                     <InputError :message="form.errors[field.name]" class="mt-2" />

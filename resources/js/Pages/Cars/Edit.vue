@@ -10,6 +10,14 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    statuses: {
+        type: Array,
+        required: true,
+    },
+    drivetrains: {
+        type: Array,
+        required: true,
+    },
 });
 
 const title = computed(() => `Edit ${carTitle(props.car)}`);
@@ -28,6 +36,8 @@ const title = computed(() => `Edit ${carTitle(props.car)}`);
         <div class="py-12">
             <div class="mx-auto max-w-4xl sm:px-6 lg:px-8">
                 <CarForm
+                    :statuses="statuses"
+                    :drivetrains="drivetrains"
                     :car="car"
                     method="put"
                     :action="route('cars.update', car.id)"

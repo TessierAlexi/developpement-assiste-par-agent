@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMileage, formatPrice, formatText } from './formatters';
+import { formatConsumption, formatDisplacement, formatMileage, formatPrice, formatText } from './formatters';
 
 describe('formatPrice', () => {
     it('formats a price in whole Canadian dollars', () => {
@@ -32,5 +32,29 @@ describe('formatText', () => {
 
     it.each([null, undefined, '', '   '])('shows a dash instead of "%s"', (value) => {
         expect(formatText(value)).toBe('—');
+    });
+});
+
+describe('formatConsumption', () => {
+    it('formats a fuel consumption with one decimal', () => {
+        expect(formatConsumption('8.9')).toBe('8.9 L/100 km');
+    });
+
+    it('keeps the decimal of a round consumption', () => {
+        expect(formatConsumption(7)).toBe('7.0 L/100 km');
+    });
+
+    it.each([null, undefined, ''])('shows a dash when the consumption is %s', (consumption) => {
+        expect(formatConsumption(consumption)).toBe('—');
+    });
+});
+
+describe('formatDisplacement', () => {
+    it('formats an engine displacement in litres with one decimal', () => {
+        expect(formatDisplacement('2.0')).toBe('2.0 L');
+    });
+
+    it.each([null, undefined, ''])('shows a dash when the displacement is %s', (displacement) => {
+        expect(formatDisplacement(displacement)).toBe('—');
     });
 });

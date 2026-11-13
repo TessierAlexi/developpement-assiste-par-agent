@@ -17,6 +17,17 @@ export const formatPrice = (dollars) => (isMissing(dollars) ? MISSING : priceFor
 export const formatMileage = (kilometres) =>
     isMissing(kilometres) ? MISSING : `${numberFormatter.format(kilometres)} km`;
 
+const oneDecimalFormatter = new Intl.NumberFormat('en-CA', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+});
+
+export const formatConsumption = (litresPer100Km) =>
+    isMissing(litresPer100Km) ? MISSING : `${oneDecimalFormatter.format(litresPer100Km)} L/100 km`;
+
+export const formatDisplacement = (litres) =>
+    isMissing(litres) ? MISSING : `${oneDecimalFormatter.format(litres)} L`;
+
 export const carTitle = (car) => `${car.year} ${car.make} ${car.model}`;
 
 const dateFormatter = new Intl.DateTimeFormat('en-CA', { dateStyle: 'medium' });

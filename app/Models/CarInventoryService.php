@@ -5,36 +5,35 @@ namespace App\Models;
 /**
  * Business rules for adding, editing, selling and removing cars.
  *
- * The status and sale date only change through changeStatus(), so a sold
- * car keeps its sale date however its details are edited.
+ * The status and sale date only change through changeStatus(), never through
+ * the car details, so a sold car keeps its sale date however it is edited.
  */
 class CarInventoryService
 {
     /**
-     * Add a new car to the inventory; it starts out available.
+     * Add a new car to the inventory; it starts out available unless another status is given.
      *
      * @param  array<string, mixed>  $attributes
      */
-    public function add(array $attributes): Car
+    public function add(array $attributes, CarStatus $status = CarStatus::Available): Car
     {
         $car = new Car($attributes);
         $car->status = CarStatus::Available;
         $car->sold_on = null;
-        $car->save();
 
-        return $car;
+        return $this->changeStatus($car, $status);
     }
 
     /**
-     * Update the details of a car, leaving its status and sale date alone.
+     * Update the details of a car, leaving its status and sale date alone unless a status is given.
      *
      * @param  array<string, mixed>  $attributes
      */
-    public function update(Car $car, array $attributes): Car
+    public function update(Car $car, array $attributes, ?CarStatus $status = null): Car
     {
-        $car->update($attributes);
+        $car->fill($attributes);
 
-        return $car;
+        return $this->changeStatus($car, $status ?? $car->status);
     }
 
     /**

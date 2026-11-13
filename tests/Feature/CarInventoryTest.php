@@ -2,6 +2,7 @@
 
 use App\Models\Car;
 use App\Models\CarStatus;
+use App\Models\Drivetrain;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -44,6 +45,8 @@ function carFormPayload(array $overrides = []): array
 {
     return [
         'stock_number' => 'STK-2042',
+        'vin' => '1HGCM82633A004352',
+        'status' => 'available',
         'received_on' => '2026-11-03',
         'year' => 2023,
         'make' => 'Honda',
@@ -53,9 +56,20 @@ function carFormPayload(array $overrides = []): array
         'fuel_type' => 'Gasoline',
         'transmission' => 'Manual',
         'colour' => 'Sonic Grey Pearl',
+        'interior_colour' => 'Black cloth',
+        'engine' => '2.0L I4 DOHC',
+        'engine_displacement_l' => 2.0,
+        'cylinders' => 4,
+        'drivetrain' => 'FWD',
+        'doors' => 4,
+        'seats' => 5,
+        'city_l_per_100km' => 8.9,
+        'highway_l_per_100km' => 6.4,
         'mileage_km' => 35_600,
         'price' => 32_400,
+        'cost_price' => 27_500,
         'description' => 'One owner, winter tires included.',
+        'internal_notes' => 'Trade-in, second key missing.',
         'photo_url' => null,
         'photo_source_url' => null,
         'photo_author' => null,
@@ -253,8 +267,80 @@ describe('create', function () {
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Cars/Create')
                 ->where('defaults.received_on', '2026-11-10')
+                ->where('defaults.status', 'available')
             );
     });
+});
+
+describe('car form', function () {
+    it('offers the same status and drivetrain choices', function (string $routeName) {
+        $car = Car::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route($routeName, $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('statuses', [
+                    ['value' => 'available', 'label' => 'Available'],
+                    ['value' => 'on_hold', 'label' => 'On hold'],
+                    ['value' => 'sold', 'label' => 'Sold'],
+                ])
+                ->where('drivetrains', [
+                    ['value' => 'FWD', 'label' => 'Front-wheel drive (FWD)'],
+                    ['value' => 'RWD', 'label' => 'Rear-wheel drive (RWD)'],
+                    ['value' => 'AWD', 'label' => 'All-wheel drive (AWD)'],
+                    ['value' => '4WD', 'label' => 'Four-wheel drive (4WD)'],
+                ])
+            );
+    })->with([
+        'on the add form' => 'cars.create',
+        'on the edit form' => 'cars.edit',
+    ]);
+
+    it('applies the same rule when adding and when editing', function (string $method, string $routeName, string $field, mixed $value, string $message) {
+        $this->travelTo('2026-11-10');
+        $car = Car::factory()->create(['stock_number' => 'STK-0001']);
+
+        $this->actingAs(User::factory()->create())
+            ->{$method}(route($routeName, $car), carFormPayload([$field => $value]))
+            ->assertSessionHasErrors([$field => $message]);
+
+        expect(Car::count())->toBe(1)
+            ->and($car->refresh()->stock_number)->toBe('STK-0001');
+    })->with([
+        'adding' => ['post', 'cars.store'],
+        'editing' => ['put', 'cars.update'],
+    ])->with([
+        'a VIN that is not valid' => ['vin', '1HGCM82643A004352', 'The VIN must be 17 characters, without I, O or Q, and have a valid check digit.'],
+        'an unknown status' => ['status', 'stolen', 'The selected status is invalid.'],
+        'a year before 1900' => ['year', 1899, 'The year field must be between 1900 and 2027.'],
+        'an unknown drivetrain' => ['drivetrain', '2WD', 'The selected drivetrain is invalid.'],
+        'an engine larger than 10 L' => ['engine_displacement_l', 10.1, 'The engine displacement field must be between 0.5 and 10.'],
+        'a displacement with two decimals' => ['engine_displacement_l', 2.25, 'The engine displacement field must have 0-1 decimal places.'],
+        'cylinders that are not a number' => ['cylinders', 'six', 'The cylinders field must be an integer.'],
+        'a single cylinder' => ['cylinders', 1, 'The cylinders field must be between 2 and 16.'],
+        'six doors' => ['doors', 6, 'The doors field must be between 2 and 5.'],
+        'no seats' => ['seats', 0, 'The seats field must be between 1 and 15.'],
+        'a city consumption over 40' => ['city_l_per_100km', 40.1, 'The city consumption field must be between 1 and 40.'],
+        'a highway consumption under 1' => ['highway_l_per_100km', 0.9, 'The highway consumption field must be between 1 and 40.'],
+        'a negative cost price' => ['cost_price', -1, 'The cost price field must be at least 0.'],
+        'internal notes that are too long' => ['internal_notes', str_repeat('a', 5001), 'The internal notes field must not be greater than 5000 characters.'],
+    ]);
+
+    it('rejects a VIN already used by another car', function (string $method, string $routeName) {
+        Car::factory()->create(['vin' => '1M8GDM9AXKP042788']);
+        $car = Car::factory()->create(['stock_number' => 'STK-0001']);
+
+        $this->actingAs(User::factory()->create())
+            ->{$method}(route($routeName, $car), carFormPayload(['vin' => '1M8GDM9AXKP042788']))
+            ->assertSessionHasErrors(['vin' => 'The VIN has already been taken.']);
+
+        expect(Car::count())->toBe(2)
+            ->and($car->refresh()->vin)->toBeNull();
+    })->with([
+        'adding' => ['post', 'cars.store'],
+        'editing' => ['put', 'cars.update'],
+    ]);
 });
 
 describe('store', function () {
@@ -275,6 +361,59 @@ describe('store', function () {
             ->sold_on->toBeNull();
     });
 
+    it('saves the technical details of the new car', function () {
+        $this->actingAs(User::factory()->create())
+            ->post(route('cars.store'), carFormPayload())
+            ->assertRedirect(route('cars.show', Car::sole()));
+
+        expect(Car::sole())
+            ->vin->toBe('1HGCM82633A004352')
+            ->interior_colour->toBe('Black cloth')
+            ->engine->toBe('2.0L I4 DOHC')
+            ->engine_displacement_l->toBe('2.0')
+            ->cylinders->toBe(4)
+            ->drivetrain->toBe(Drivetrain::FrontWheel)
+            ->doors->toBe(4)
+            ->seats->toBe(5)
+            ->city_l_per_100km->toBe('8.9')
+            ->highway_l_per_100km->toBe('6.4')
+            ->cost_price->toBe(27_500)
+            ->internal_notes->toBe('Trade-in, second key missing.');
+    });
+
+    it('adds a car whose technical details are not known yet', function () {
+        $unknown = array_fill_keys([
+            'vin', 'interior_colour', 'engine', 'engine_displacement_l', 'cylinders', 'drivetrain',
+            'doors', 'seats', 'city_l_per_100km', 'highway_l_per_100km', 'cost_price', 'internal_notes',
+        ], '');
+
+        $this->actingAs(User::factory()->create())
+            ->post(route('cars.store'), carFormPayload($unknown))
+            ->assertRedirect(route('cars.show', Car::sole()));
+
+        expect(Car::sole()->only(array_keys($unknown)))->each->toBeNull();
+    });
+
+    it('stores a VIN typed in lowercase in uppercase', function () {
+        $this->actingAs(User::factory()->create())
+            ->post(route('cars.store'), carFormPayload(['vin' => ' 1hgcm82633a004352 ']))
+            ->assertRedirect(route('cars.show', Car::sole()));
+
+        expect(Car::sole()->vin)->toBe('1HGCM82633A004352');
+    });
+
+    it('adds a car that is already sold with today as its sale date', function () {
+        $this->travelTo('2026-11-10');
+
+        $this->actingAs(User::factory()->create())
+            ->post(route('cars.store'), carFormPayload(['status' => 'sold', 'sold_on' => '2026-11-01']))
+            ->assertRedirect(route('cars.show', Car::sole()));
+
+        expect(Car::sole())
+            ->status->toBe(CarStatus::Sold)
+            ->sold_on->toDateString()->toBe('2026-11-10');
+    });
+
     it('adds a car whose price and colour are not known yet', function () {
         $this->actingAs(User::factory()->create())
             ->post(route('cars.store'), carFormPayload(['price' => '', 'colour' => '', 'description' => '']))
@@ -292,9 +431,9 @@ describe('store', function () {
             ->assertSessionHasErrors([
                 'stock_number' => 'The stock number field is required.',
                 'received_on', 'year', 'make', 'model', 'trim', 'body_type',
-                'fuel_type', 'transmission', 'mileage_km',
+                'fuel_type', 'transmission', 'mileage_km', 'status',
             ])
-            ->assertSessionDoesntHaveErrors(['colour', 'price']);
+            ->assertSessionDoesntHaveErrors(['colour', 'price', 'vin', 'drivetrain', 'cylinders', 'cost_price']);
 
         expect(Car::count())->toBe(0);
     });
@@ -338,6 +477,30 @@ describe('edit', function () {
                 ->where('car.received_on', '2026-09-14')
             );
     });
+
+    it('fills the form with the technical details of the car', function () {
+        $car = Car::factory()->withTechnicalDetails()->create([
+            'vin' => '1HGCM82633A004352',
+            'drivetrain' => Drivetrain::AllWheel,
+            'engine_displacement_l' => 2.5,
+            'city_l_per_100km' => 9.2,
+            'cost_price' => 21_000,
+            'internal_notes' => 'Windshield chip to repair.',
+        ]);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.edit', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('car.vin', '1HGCM82633A004352')
+                ->where('car.status', 'available')
+                ->where('car.drivetrain', 'AWD')
+                ->where('car.engine_displacement_l', '2.5')
+                ->where('car.city_l_per_100km', '9.2')
+                ->where('car.cost_price', 21_000)
+                ->where('car.internal_notes', 'Windshield chip to repair.')
+            );
+    });
 });
 
 describe('update', function () {
@@ -367,7 +530,23 @@ describe('update', function () {
             ->colour->toBeNull();
     });
 
-    it('does not change the status through the edit form', function () {
+    it('saves the technical details and keeps its own VIN', function () {
+        $car = Car::factory()->create(['vin' => '1HGCM82633A004352']);
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('cars.update', $car), carFormPayload(['drivetrain' => '4WD', 'cylinders' => 6, 'engine_displacement_l' => '3.5']))
+            ->assertRedirect(route('cars.show', $car));
+
+        expect($car->refresh())
+            ->vin->toBe('1HGCM82633A004352')
+            ->drivetrain->toBe(Drivetrain::FourWheel)
+            ->cylinders->toBe(6)
+            ->engine_displacement_l->toBe('3.5')
+            ->internal_notes->toBe('Trade-in, second key missing.');
+    });
+
+    it('marks the car sold through the edit form with today as its sale date', function () {
+        $this->travelTo('2026-11-10');
         $car = Car::factory()->create();
 
         $this->actingAs(User::factory()->create())
@@ -375,8 +554,20 @@ describe('update', function () {
             ->assertRedirect(route('cars.show', $car));
 
         expect($car->refresh())
-            ->status->toBe(CarStatus::Available)
-            ->sold_on->toBeNull();
+            ->status->toBe(CarStatus::Sold)
+            ->sold_on->toDateString()->toBe('2026-11-10');
+    });
+
+    it('keeps the sale date of a sold car when its other details are edited', function () {
+        $car = Car::factory()->sold('2026-10-01')->create();
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('cars.update', $car), carFormPayload(['status' => 'sold', 'price' => 29_900]))
+            ->assertRedirect(route('cars.show', $car));
+
+        expect($car->refresh())
+            ->price->toBe(29_900)
+            ->sold_on->toDateString()->toBe('2026-10-01');
     });
 
     it('rejects a stock number already used by another car', function () {

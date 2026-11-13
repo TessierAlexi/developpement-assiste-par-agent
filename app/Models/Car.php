@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
-    'stock_number', 'received_on',
-    'year', 'make', 'model', 'trim', 'body_type', 'fuel_type', 'transmission', 'colour',
-    'mileage_km', 'price', 'description',
+    'stock_number', 'vin', 'received_on',
+    'year', 'make', 'model', 'trim', 'body_type', 'doors', 'seats', 'colour', 'interior_colour',
+    'engine', 'engine_displacement_l', 'cylinders', 'transmission', 'drivetrain', 'fuel_type',
+    'city_l_per_100km', 'highway_l_per_100km',
+    'mileage_km', 'price', 'cost_price', 'description', 'internal_notes',
     'photo_url', 'photo_source_url', 'photo_author', 'photo_licence', 'photo_licence_url', 'photo_attribution_required',
 ])]
 class Car extends Model
@@ -33,6 +35,14 @@ class Car extends Model
             'year' => 'integer',
             'mileage_km' => 'integer',
             'price' => 'integer',
+            'cost_price' => 'integer',
+            'drivetrain' => Drivetrain::class,
+            'engine_displacement_l' => 'decimal:1',
+            'cylinders' => 'integer',
+            'doors' => 'integer',
+            'seats' => 'integer',
+            'city_l_per_100km' => 'decimal:1',
+            'highway_l_per_100km' => 'decimal:1',
             'photo_attribution_required' => 'boolean',
         ];
     }
