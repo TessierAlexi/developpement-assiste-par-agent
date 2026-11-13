@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Services;
 
+use App\Enums\CarStatus;
+use App\Models\Car;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 

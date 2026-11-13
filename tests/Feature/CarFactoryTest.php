@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Car;
-use App\Models\Vin;
+use App\Support\Vin;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 uses(LazilyRefreshDatabase::class);

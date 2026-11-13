@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Enums\CarStatus;
+use App\Enums\Drivetrain;
 use App\Models\Car;
-use App\Models\CarStatus;
 use App\Models\CarStatusChange;
-use App\Models\Drivetrain;
 use App\Models\User;
-use App\Models\WikipediaPhotos;
+use App\Services\WikipediaPhotos;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;

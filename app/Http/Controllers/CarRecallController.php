@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\RecallLookupFailed;
 use App\Models\Car;
-use App\Models\RecallLookupFailed;
-use App\Models\SafetyRecallService;
+use App\Services\SafetyRecallService;
 use Illuminate\Http\JsonResponse;
 
 class CarRecallController extends Controller

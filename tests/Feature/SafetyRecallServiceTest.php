@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\RecallLookupFailed;
-use App\Models\SafetyRecallService;
+use App\Exceptions\RecallLookupFailed;
+use App\Services\SafetyRecallService;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 

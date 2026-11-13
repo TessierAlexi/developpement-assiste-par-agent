@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Support;
 
 /**
  * The equipment a car can come with: the single place where the options and their categories are defined.

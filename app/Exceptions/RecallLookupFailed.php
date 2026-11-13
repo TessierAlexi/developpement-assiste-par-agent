@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Exceptions;
 
 use Illuminate\Contracts\Debug\ShouldntReport;
 use Illuminate\Http\JsonResponse;

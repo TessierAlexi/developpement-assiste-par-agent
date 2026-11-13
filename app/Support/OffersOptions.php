@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Support;
 
 /**
  * Lets a labelled enum list its cases as the choices of a select input or a tab list.

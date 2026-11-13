@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Services;
 
+use App\Enums\CarStatus;
+use App\Models\Car;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**

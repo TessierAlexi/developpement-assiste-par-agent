@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Support;
 
 /**
  * Turns the recalls NHTSA lists for a vehicle into the details shown for a car.

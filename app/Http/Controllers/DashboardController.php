@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InventoryDashboardService;
+use App\Services\InventoryDashboardService;
 use Inertia\Inertia;
 use Inertia\Response;
 

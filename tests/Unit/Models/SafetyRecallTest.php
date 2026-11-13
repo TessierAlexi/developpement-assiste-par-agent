@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\SafetyRecall;
+use App\Support\SafetyRecall;
 
 it('keeps the campaign number, component, summary, consequence and remedy of each recall', function () {
     $recalls = SafetyRecall::listFrom([[

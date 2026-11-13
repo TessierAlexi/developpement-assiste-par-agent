@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\CarStatus;
+use App\Enums\CarStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

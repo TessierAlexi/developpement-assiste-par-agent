@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\CarStatus;
 use App\Models\Car;
-use App\Models\CarStatus;
 use App\Models\CarStatusChange;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;

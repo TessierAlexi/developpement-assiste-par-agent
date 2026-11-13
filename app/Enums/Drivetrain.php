@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Enums;
+
+use App\Support\OffersOptions;
 
 /**
  * Which wheels of a car are driven.

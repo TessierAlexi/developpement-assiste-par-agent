@@ -1,9 +1,9 @@
 <?php
 
+use App\Enums\CarStatus;
 use App\Models\Car;
-use App\Models\CarInventoryService;
-use App\Models\CarStatus;
 use App\Models\User;
+use App\Services\CarInventoryService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 uses(LazilyRefreshDatabase::class);

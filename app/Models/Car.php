@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CarStatus;
+use App\Enums\Drivetrain;
 use Database\Factories\CarFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;

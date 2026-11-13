@@ -1,12 +1,12 @@
 <?php
 
+use App\Enums\CarStatus;
+use App\Enums\Drivetrain;
 use App\Models\Car;
-use App\Models\CarEquipment;
-use App\Models\CarStatus;
 use App\Models\CarStatusChange;
-use App\Models\Drivetrain;
 use App\Models\User;
-use App\Models\Vin;
+use App\Support\CarEquipment;
+use App\Support\Vin;
 use Database\Seeders\CarSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;

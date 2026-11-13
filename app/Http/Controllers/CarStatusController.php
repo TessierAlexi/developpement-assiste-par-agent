@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateCarStatusRequest;
 use App\Models\Car;
-use App\Models\CarInventoryService;
+use App\Services\CarInventoryService;
 use Illuminate\Http\RedirectResponse;
 
 class CarStatusController extends Controller

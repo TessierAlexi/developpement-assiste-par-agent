@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CarStatus;
+use App\Enums\Drivetrain;
 use App\Models\Car;
-use App\Models\CarEquipment;
-use App\Models\CarStatus;
-use App\Models\Drivetrain;
-use App\Models\Vin;
+use App\Support\CarEquipment;
+use App\Support\Vin;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

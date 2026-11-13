@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\CarEquipment;
+use App\Support\CarEquipment;
 
 it('offers ten categories in a fixed order', function () {
     expect(array_column(CarEquipment::catalogue(), 'label'))->toBe([

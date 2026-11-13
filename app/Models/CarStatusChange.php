@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CarStatus;
 use Database\Factories\CarStatusChangeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

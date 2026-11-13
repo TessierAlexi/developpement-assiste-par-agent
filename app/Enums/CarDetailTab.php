@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Enums;
+
+use App\Support\OffersOptions;
 
 /**
  * The tabs of the car detail page, in the order they are shown; the value is what appears in the URL.

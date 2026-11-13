@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Services;
 
+use App\Exceptions\RecallLookupFailed;
+use App\Support\SafetyRecall;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;

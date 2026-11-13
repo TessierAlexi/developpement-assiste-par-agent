@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Enums;
+
+use App\Support\OffersOptions;
 
 /**
  * Where a car stands in the dealership's inventory.

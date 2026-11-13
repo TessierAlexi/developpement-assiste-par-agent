@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CarDetailTab;
+use App\Enums\CarStatus;
+use App\Enums\Drivetrain;
 use App\Http\Requests\CarRequest;
 use App\Models\Car;
-use App\Models\CarDetailTab;
-use App\Models\CarEquipment;
-use App\Models\CarInventoryService;
-use App\Models\CarStatus;
 use App\Models\CarStatusChange;
-use App\Models\Drivetrain;
+use App\Services\CarInventoryService;
+use App\Support\CarEquipment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;

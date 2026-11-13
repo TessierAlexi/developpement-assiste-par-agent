@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Enums\CarStatus;
+use App\Enums\Drivetrain;
 use App\Models\Car;
-use App\Models\CarStatus;
-use App\Models\Drivetrain;
-use App\Models\Vin;
+use App\Support\Vin;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

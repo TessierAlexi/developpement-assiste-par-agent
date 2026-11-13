@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Car;
-use App\Models\InventoryDashboardService;
+use App\Services\InventoryDashboardService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 uses(LazilyRefreshDatabase::class);

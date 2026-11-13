@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Vin;
+use App\Support\Vin;
 
 it('accepts a VIN whose check digit matches', function (string $vin) {
     expect(Vin::isValid($vin))->toBeTrue();
