@@ -1,10 +1,15 @@
 <script setup>
 import CarPhoto from '@/Components/CarPhoto.vue';
+import CarStatusBadge from '@/Components/CarStatusBadge.vue';
+import DangerButton from '@/Components/DangerButton.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
 import Modal from '@/Components/Modal.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { carTitle, formatMileage, formatPrice } from '@/formatters';
-import { Head, Link } from '@inertiajs/vue3';
+import { carTitle, formatDate, formatMileage, formatPrice } from '@/formatters';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
@@ -12,14 +17,37 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    statuses: {
+        type: Array,
+        required: true,
+    },
 });
 
 const isPhotoEnlarged = ref(false);
+const isConfirmingDeletion = ref(false);
+
+const statusForm = useForm({ status: props.car.status });
+const deleteForm = useForm({});
+
+const changeStatus = () => {
+    statusForm.patch(route('cars.status.update', props.car.id), { preserveScroll: true });
+};
+
+const deleteCar = () => {
+    deleteForm.delete(route('cars.destroy', props.car.id), {
+        onFinish: () => {
+            isConfirmingDeletion.value = false;
+        },
+    });
+};
 
 const title = computed(() => carTitle(props.car));
 const photoAlt = computed(() => `${props.car.make} ${props.car.model}`);
 
 const specifications = computed(() => [
+    ['Stock number', props.car.stock_number],
+    ['Received on', formatDate(props.car.received_on)],
+    ...(props.car.sold_on ? [['Sold on', formatDate(props.car.sold_on)]] : []),
     ['Year', props.car.year],
     ['Trim', props.car.trim],
     ['Body type', props.car.body_type],
@@ -39,12 +67,21 @@ const specifications = computed(() => [
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">
                     {{ title }} <span class="font-normal text-gray-500">{{ car.trim }}</span>
                 </h2>
-                <Link
-                    :href="route('cars.index')"
-                    class="text-sm text-gray-600 underline hover:text-gray-900"
-                >
-                    ← Back to cars
-                </Link>
+                <div class="flex items-center gap-4">
+                    <Link
+                        :href="route('cars.index')"
+                        class="text-sm text-gray-600 underline hover:text-gray-900"
+                    >
+                        ← Back to cars
+                    </Link>
+                    <Link
+                        :href="route('cars.edit', car.id)"
+                        class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >
+                        Edit
+                    </Link>
+                    <DangerButton @click="isConfirmingDeletion = true">Delete</DangerButton>
+                </div>
             </div>
         </template>
 
@@ -75,9 +112,34 @@ const specifications = computed(() => [
                 </figure>
 
                 <section class="space-y-6 bg-white p-6 shadow-sm sm:rounded-lg lg:col-span-2">
-                    <p class="text-3xl font-semibold text-indigo-600">
-                        {{ formatPrice(car.price) }}
-                    </p>
+                    <div class="flex items-center justify-between gap-4">
+                        <p class="text-3xl font-semibold text-indigo-600">
+                            {{ formatPrice(car.price) }}
+                        </p>
+                        <CarStatusBadge :status="car.status" />
+                    </div>
+
+                    <form class="flex items-end gap-2" @submit.prevent="changeStatus">
+                        <div class="flex-1">
+                            <InputLabel for="status" value="Status" />
+                            <select
+                                id="status"
+                                v-model="statusForm.status"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            >
+                                <option v-for="option in statuses" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                            <InputError :message="statusForm.errors.status" class="mt-2" />
+                        </div>
+                        <PrimaryButton
+                            :class="{ 'opacity-25': statusForm.processing }"
+                            :disabled="statusForm.processing || statusForm.status === car.status"
+                        >
+                            Update status
+                        </PrimaryButton>
+                    </form>
 
                     <dl class="divide-y divide-gray-100">
                         <div
@@ -101,6 +163,28 @@ const specifications = computed(() => [
             <CarPhoto :src="car.photo_url" :alt="photoAlt" />
             <div class="flex justify-end p-4">
                 <SecondaryButton @click="isPhotoEnlarged = false">Close</SecondaryButton>
+            </div>
+        </Modal>
+
+        <Modal :show="isConfirmingDeletion" max-width="md" @close="isConfirmingDeletion = false">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900">
+                    Delete {{ title }} ({{ car.stock_number }})?
+                </h2>
+                <p class="mt-1 text-sm text-gray-600">
+                    The car will be permanently removed from the inventory.
+                </p>
+                <div class="mt-6 flex justify-end">
+                    <SecondaryButton @click="isConfirmingDeletion = false">Cancel</SecondaryButton>
+                    <DangerButton
+                        class="ms-3"
+                        :class="{ 'opacity-25': deleteForm.processing }"
+                        :disabled="deleteForm.processing"
+                        @click="deleteCar"
+                    >
+                        Delete car
+                    </DangerButton>
+                </div>
             </div>
         </Modal>
     </AuthenticatedLayout>

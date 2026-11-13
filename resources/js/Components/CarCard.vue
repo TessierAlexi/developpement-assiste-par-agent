@@ -1,5 +1,6 @@
 <script setup>
 import CarPhoto from '@/Components/CarPhoto.vue';
+import CarStatusBadge from '@/Components/CarStatusBadge.vue';
 import { carTitle, formatMileage, formatPrice } from '@/formatters';
 import { Link } from '@inertiajs/vue3';
 
@@ -23,10 +24,14 @@ defineProps({
         />
 
         <div class="p-4">
-            <h3 class="font-semibold text-gray-900">{{ carTitle(car) }}</h3>
+            <div class="flex items-start justify-between gap-2">
+                <h3 class="font-semibold text-gray-900">{{ carTitle(car) }}</h3>
+                <CarStatusBadge :status="car.status" />
+            </div>
             <p class="text-sm text-gray-500">
                 {{ car.trim }} · {{ car.body_type }}
             </p>
+            <p class="text-xs text-gray-400">{{ car.stock_number }}</p>
 
             <div class="mt-3 flex items-baseline justify-between">
                 <span class="text-lg font-semibold text-indigo-600">

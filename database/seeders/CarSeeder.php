@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Car;
+use Database\Factories\CarFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
@@ -74,16 +75,32 @@ class CarSeeder extends Seeder
                 ? Car::factory()->state($photos[$vehicle['article']])
                 : Car::factory()->withoutPhoto();
 
-            $factory->create([
+            $listedAt = now()->subHours($index * 9);
+
+            $this->withStatus($factory, $index)->create([
                 ...Arr::except($vehicle, 'article'),
+                'stock_number' => sprintf('STK-%05d', 1001 + $index),
+                'received_on' => $listedAt->toDateString(),
                 'description' => $this->describe($vehicle),
-                'created_at' => now()->subHours($index * 9),
+                'created_at' => $listedAt,
             ]);
         }
 
         if (count($photos) < count($articles)) {
             $this->command?->warn('Some car photos could not be fetched from Wikipedia; those cars will show a placeholder.');
         }
+    }
+
+    /**
+     * Put a few cars on hold and mark a few sold, so every status shows up in the list.
+     */
+    protected function withStatus(CarFactory $factory, int $index): CarFactory
+    {
+        return match ($index % 7) {
+            3 => $factory->onHold(),
+            5 => $factory->sold(now()->subHours($index * 4)->toDateString()),
+            default => $factory,
+        };
     }
 
     /**

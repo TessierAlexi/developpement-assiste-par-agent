@@ -67,3 +67,12 @@ it('still seeds the cars without pictures when Wikipedia is unavailable', functi
     expect(Car::count())->toBeGreaterThanOrEqual(25)
         ->and(Car::whereNotNull('photo_url')->count())->toBe(0);
 });
+
+it('gives every seeded car its own stock number and received date', function () {
+    fakeWikipediaApi();
+
+    $this->seed(CarSeeder::class);
+
+    expect(Car::distinct()->count('stock_number'))->toBe(Car::count())
+        ->and(Car::whereNull('received_on')->count())->toBe(0);
+});

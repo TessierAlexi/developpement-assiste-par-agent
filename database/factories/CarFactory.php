@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Car;
+use App\Models\CarStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -33,6 +34,10 @@ class CarFactory extends Factory
         [$make, $model, $trim, $bodyType] = fake()->randomElement(self::VEHICLES);
 
         return [
+            'stock_number' => fake()->unique()->bothify('STK-#####'),
+            'status' => CarStatus::Available,
+            'received_on' => fake()->dateTimeBetween('-120 days', '-1 day')->format('Y-m-d'),
+            'sold_on' => null,
             'year' => fake()->numberBetween(2015, 2026),
             'make' => $make,
             'model' => $model,
@@ -65,6 +70,28 @@ class CarFactory extends Factory
             'photo_licence' => null,
             'photo_licence_url' => null,
             'photo_attribution_required' => false,
+        ]);
+    }
+
+    /**
+     * Indicate that a customer has put the car on hold.
+     */
+    public function onHold(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => CarStatus::OnHold,
+            'sold_on' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the car was sold, on the given date or yesterday.
+     */
+    public function sold(?string $soldOn = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => CarStatus::Sold,
+            'sold_on' => $soldOn ?? now()->subDay()->toDateString(),
         ]);
     }
 }
