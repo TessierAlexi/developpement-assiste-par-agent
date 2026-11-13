@@ -94,6 +94,10 @@ git diff etape-2 etape-3 -- app resources tests # ce que le prompt 3 a changé
 
 Le dernier commit de la branche est le rangement des classes ; il donne le même code que `projet-complet`.
 
+## Automatiser les vérifications
+
+`exemple-github-actions.yml` montre les garde-fous des diapositives dans GitHub Actions : Pint, Larastan avec les règles de dépréciation, Rector pour la prochaine version de PHP, les tests sur PHP 8.5 et nightly, Vitest et le build sur Node LTS et `current` avec `--throw-deprecation`, et l'audit des dépendances. Il est à la racine pour ne pas rouler : copie-le dans `.github/workflows/` pour l'activer. Ses commentaires expliquent quels paquets ajouter d'abord.
+
 ## Recommencer
 
 ```bash
