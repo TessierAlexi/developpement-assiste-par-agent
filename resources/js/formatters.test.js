@@ -1,0 +1,73 @@
+import { describe, expect, it } from 'vitest';
+import { formatConsumption, formatDateTime, formatDisplacement, formatMileage, formatPrice, formatText } from './formatters';
+
+describe('formatPrice', () => {
+    it('formats a price in whole Canadian dollars', () => {
+        expect(formatPrice(24995)).toBe('$24,995');
+    });
+
+    it.each([null, undefined, ''])('shows a dash instead of $0 when the price is %s', (price) => {
+        expect(formatPrice(price)).toBe('—');
+    });
+});
+
+describe('formatMileage', () => {
+    it('formats a mileage in kilometres', () => {
+        expect(formatMileage(41200)).toBe('41,200 km');
+    });
+
+    it('keeps a real zero for a brand new car', () => {
+        expect(formatMileage(0)).toBe('0 km');
+    });
+
+    it.each([null, undefined])('shows a dash when the mileage is %s', (mileage) => {
+        expect(formatMileage(mileage)).toBe('—');
+    });
+});
+
+describe('formatText', () => {
+    it('keeps a value that is present', () => {
+        expect(formatText('Soul Red Crystal')).toBe('Soul Red Crystal');
+    });
+
+    it.each([null, undefined, '', '   '])('shows a dash instead of "%s"', (value) => {
+        expect(formatText(value)).toBe('—');
+    });
+});
+
+describe('formatConsumption', () => {
+    it('formats a fuel consumption with one decimal', () => {
+        expect(formatConsumption('8.9')).toBe('8.9 L/100 km');
+    });
+
+    it('keeps the decimal of a round consumption', () => {
+        expect(formatConsumption(7)).toBe('7.0 L/100 km');
+    });
+
+    it.each([null, undefined, ''])('shows a dash when the consumption is %s', (consumption) => {
+        expect(formatConsumption(consumption)).toBe('—');
+    });
+});
+
+describe('formatDisplacement', () => {
+    it('formats an engine displacement in litres with one decimal', () => {
+        expect(formatDisplacement('2.0')).toBe('2.0 L');
+    });
+
+    it.each([null, undefined, ''])('shows a dash when the displacement is %s', (displacement) => {
+        expect(formatDisplacement(displacement)).toBe('—');
+    });
+});
+
+describe('formatDateTime', () => {
+    it('formats a timestamp with its date and time of day', () => {
+        const formatted = formatDateTime(new Date(2026, 10, 8, 16, 45).toISOString());
+
+        expect(formatted).toContain('Nov 8, 2026');
+        expect(formatted).toContain('4:45');
+    });
+
+    it.each([null, undefined, ''])('shows a dash when the timestamp is %s', (timestamp) => {
+        expect(formatDateTime(timestamp)).toBe('—');
+    });
+});

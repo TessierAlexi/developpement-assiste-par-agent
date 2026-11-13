@@ -48,3 +48,44 @@ function something()
 {
     // ..
 }
+
+/**
+ * One recall as NHTSA's recallsByVehicle endpoint lists it for a 2023 Honda Accord,
+ * trimmed to the fields the application reads plus a few it ignores.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function nhtsaRecall(array $overrides = []): array
+{
+    return [
+        'Manufacturer' => 'Honda (American Honda Motor Co.)',
+        'NHTSACampaignNumber' => '23V782000',
+        'parkIt' => false,
+        'parkOutSide' => false,
+        'ReportReceivedDate' => '21/11/2023',
+        'Component' => 'SEAT BELTS:FRONT',
+        'Summary' => 'Honda is recalling certain 2023-2024 Accord and HR-V vehicles.',
+        'Consequence' => 'A seat belt pretensioner missing a rivet will not properly restrain the occupant.',
+        'Remedy' => 'Dealers will inspect and replace the seat belt pretensioner assemblies, free of charge.',
+        'ModelYear' => '2023',
+        'Make' => 'HONDA',
+        'Model' => 'ACCORD',
+        ...$overrides,
+    ];
+}
+
+/**
+ * The body NHTSA's recallsByVehicle endpoint returns for the given recalls.
+ *
+ * @param  list<array<string, mixed>>  $recalls
+ * @return array{Count: int, Message: string, results: list<array<string, mixed>>}
+ */
+function nhtsaRecalls(array $recalls): array
+{
+    return [
+        'Count' => count($recalls),
+        'Message' => 'Results returned successfully',
+        'results' => $recalls,
+    ];
+}
