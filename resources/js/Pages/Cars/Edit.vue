@@ -18,6 +18,10 @@ const props = defineProps({
         type: Array,
         required: true,
     },
+    equipmentCatalogue: {
+        type: Array,
+        required: true,
+    },
 });
 
 const title = computed(() => `Edit ${carTitle(props.car)}`);
@@ -38,6 +42,7 @@ const title = computed(() => `Edit ${carTitle(props.car)}`);
                 <CarForm
                     :statuses="statuses"
                     :drivetrains="drivetrains"
+                    :equipment-catalogue="equipmentCatalogue"
                     :car="car"
                     method="put"
                     :action="route('cars.update', car.id)"

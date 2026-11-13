@@ -35,6 +35,10 @@ const props = defineProps({
         type: Array,
         required: true,
     },
+    equipmentCatalogue: {
+        type: Array,
+        required: true,
+    },
 });
 
 const sections = [
@@ -76,6 +80,12 @@ const sections = [
         ],
     },
     {
+        title: 'Equipment',
+        fields: [
+            { name: 'equipment', label: 'Equipment', type: 'checkbox-groups', groups: props.equipmentCatalogue },
+        ],
+    },
+    {
         title: 'Pricing',
         fields: [
             { name: 'price', label: 'Asking price (CAD)', type: 'number', min: 0 },
@@ -111,6 +121,10 @@ const initialValue = (field) => {
         return Boolean(value);
     }
 
+    if (field.type === 'checkbox-groups') {
+        return [...(value ?? [])];
+    }
+
     return value == null ? '' : String(value);
 };
 
@@ -119,6 +133,12 @@ const form = useForm(
         sections.flatMap((section) => section.fields).map((field) => [field.name, initialValue(field)]),
     ),
 );
+
+const isFullWidth = (field) => ['textarea', 'checkbox', 'checkbox-groups'].includes(field.type);
+
+const errorFor = (field) =>
+    form.errors[field.name] ??
+    Object.entries(form.errors).find(([key]) => key.startsWith(`${field.name}.`))?.[1];
 
 const submit = () => {
     form.submit(props.method, props.action, { preserveScroll: true });
@@ -138,12 +158,28 @@ const submit = () => {
                 <div
                     v-for="field in section.fields"
                     :key="field.name"
-                    :class="{ 'sm:col-span-2': field.type === 'textarea' || field.type === 'checkbox' }"
+                    :class="{ 'sm:col-span-2': isFullWidth(field) }"
                 >
                     <label v-if="field.type === 'checkbox'" class="flex items-center">
                         <Checkbox v-model:checked="form[field.name]" />
                         <span class="ms-2 text-sm text-gray-600">{{ field.label }}</span>
                     </label>
+                    <div
+                        v-else-if="field.type === 'checkbox-groups'"
+                        class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-3"
+                    >
+                        <fieldset v-for="group in field.groups" :key="group.label">
+                            <legend class="text-sm font-medium text-gray-700">{{ group.label }}</legend>
+                            <label
+                                v-for="option in group.options"
+                                :key="option.value"
+                                class="mt-2 flex items-center"
+                            >
+                                <Checkbox v-model:checked="form[field.name]" :value="option.value" />
+                                <span class="ms-2 text-sm text-gray-600">{{ option.label }}</span>
+                            </label>
+                        </fieldset>
+                    </div>
                     <template v-else>
                         <InputLabel :for="field.name" :value="field.label" />
                         <textarea
@@ -180,7 +216,7 @@ const submit = () => {
                             :class="field.class"
                         />
                     </template>
-                    <InputError :message="form.errors[field.name]" class="mt-2" />
+                    <InputError :message="errorFor(field)" class="mt-2" />
                 </div>
             </div>
         </section>

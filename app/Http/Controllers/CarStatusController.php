@@ -14,7 +14,7 @@ class CarStatusController extends Controller
      */
     public function update(UpdateCarStatusRequest $request, Car $car, CarInventoryService $inventory): RedirectResponse
     {
-        $inventory->changeStatus($car, $request->status());
+        $inventory->changeStatus($car, $request->status(), $request->user());
 
         return back();
     }

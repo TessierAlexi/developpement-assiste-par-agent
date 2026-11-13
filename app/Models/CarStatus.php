@@ -7,6 +7,8 @@ namespace App\Models;
  */
 enum CarStatus: string
 {
+    use OffersOptions;
+
     case Available = 'available';
     case OnHold = 'on_hold';
     case Sold = 'sold';
@@ -21,18 +23,5 @@ enum CarStatus: string
             self::OnHold => 'On hold',
             self::Sold => 'Sold',
         };
-    }
-
-    /**
-     * Get every status as a value and label pair, for select inputs.
-     *
-     * @return list<array{value: string, label: string}>
-     */
-    public static function options(): array
-    {
-        return array_map(
-            fn (self $status) => ['value' => $status->value, 'label' => $status->label()],
-            self::cases(),
-        );
     }
 }

@@ -16,6 +16,10 @@ defineProps({
         type: Array,
         required: true,
     },
+    equipmentCatalogue: {
+        type: Array,
+        required: true,
+    },
 });
 </script>
 
@@ -34,6 +38,7 @@ defineProps({
                 <CarForm
                     :statuses="statuses"
                     :drivetrains="drivetrains"
+                    :equipment-catalogue="equipmentCatalogue"
                     :car="defaults"
                     method="post"
                     :action="route('cars.store')"

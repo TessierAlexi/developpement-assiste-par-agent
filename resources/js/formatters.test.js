@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatConsumption, formatDisplacement, formatMileage, formatPrice, formatText } from './formatters';
+import { formatConsumption, formatDateTime, formatDisplacement, formatMileage, formatPrice, formatText } from './formatters';
 
 describe('formatPrice', () => {
     it('formats a price in whole Canadian dollars', () => {
@@ -56,5 +56,18 @@ describe('formatDisplacement', () => {
 
     it.each([null, undefined, ''])('shows a dash when the displacement is %s', (displacement) => {
         expect(formatDisplacement(displacement)).toBe('—');
+    });
+});
+
+describe('formatDateTime', () => {
+    it('formats a timestamp with its date and time of day', () => {
+        const formatted = formatDateTime(new Date(2026, 10, 8, 16, 45).toISOString());
+
+        expect(formatted).toContain('Nov 8, 2026');
+        expect(formatted).toContain('4:45');
+    });
+
+    it.each([null, undefined, ''])('shows a dash when the timestamp is %s', (timestamp) => {
+        expect(formatDateTime(timestamp)).toBe('—');
     });
 });

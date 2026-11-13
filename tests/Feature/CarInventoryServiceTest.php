@@ -3,6 +3,7 @@
 use App\Models\Car;
 use App\Models\CarInventoryService;
 use App\Models\CarStatus;
+use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 uses(LazilyRefreshDatabase::class);
@@ -84,4 +85,47 @@ it('removes a car from the inventory', function () {
     app(CarInventoryService::class)->remove($car);
 
     $this->assertModelMissing($car);
+});
+
+it('records the old status, the new status, the user and the time when the status changes', function () {
+    $this->travelTo('2026-11-10 15:30:00');
+    $car = Car::factory()->create();
+    $user = User::factory()->create();
+
+    app(CarInventoryService::class)->changeStatus($car, CarStatus::OnHold, $user);
+
+    expect($car->statusChanges()->sole())
+        ->from_status->toBe(CarStatus::Available)
+        ->to_status->toBe(CarStatus::OnHold)
+        ->user_id->toBe($user->id)
+        ->created_at->toDateTimeString()->toBe('2026-11-10 15:30:00');
+});
+
+it('records a status change made while editing the car details', function () {
+    $car = Car::factory()->onHold()->create();
+    $user = User::factory()->create();
+
+    app(CarInventoryService::class)->update($car, ['price' => 28_500], CarStatus::Sold, $user);
+
+    expect($car->statusChanges()->sole())
+        ->from_status->toBe(CarStatus::OnHold)
+        ->to_status->toBe(CarStatus::Sold)
+        ->user_id->toBe($user->id);
+});
+
+it('does not record a status change when the status stays the same', function () {
+    $car = Car::factory()->onHold()->create();
+    $user = User::factory()->create();
+
+    app(CarInventoryService::class)->changeStatus($car, CarStatus::OnHold, $user);
+    app(CarInventoryService::class)->update($car, ['price' => 28_500], null, $user);
+
+    expect($car->statusChanges()->count())->toBe(0);
+});
+
+it('does not record a status change for a car that was just added', function () {
+    $car = app(CarInventoryService::class)->add(Car::factory()->raw(), CarStatus::OnHold);
+
+    expect($car->refresh()->status)->toBe(CarStatus::OnHold)
+        ->and($car->statusChanges()->count())->toBe(0);
 });

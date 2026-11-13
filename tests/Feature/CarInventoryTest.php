@@ -2,6 +2,7 @@
 
 use App\Models\Car;
 use App\Models\CarStatus;
+use App\Models\CarStatusChange;
 use App\Models\Drivetrain;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Sequence;
@@ -617,5 +618,254 @@ describe('status', function () {
             ->assertSessionHasErrors(['status' => 'The selected status is invalid.']);
 
         expect($car->refresh()->status)->toBe(CarStatus::Available);
+    });
+});
+
+describe('tabs', function () {
+    it('offers the seven tabs of the car detail page, in order', function () {
+        $car = Car::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('tabs', [
+                    ['value' => 'overview', 'label' => 'Overview'],
+                    ['value' => 'specifications', 'label' => 'Specifications'],
+                    ['value' => 'equipment', 'label' => 'Equipment'],
+                    ['value' => 'pricing', 'label' => 'Pricing'],
+                    ['value' => 'photos', 'label' => 'Photos'],
+                    ['value' => 'history', 'label' => 'History'],
+                    ['value' => 'notes', 'label' => 'Notes'],
+                ])
+            );
+    });
+
+    it('opens the Overview tab when the URL names no tab', function () {
+        $car = Car::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('activeTab', 'overview'));
+    });
+
+    it('opens the tab named in the URL', function (string $tab) {
+        $car = Car::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', ['car' => $car, 'tab' => $tab]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('activeTab', $tab));
+    })->with(['specifications', 'equipment', 'pricing', 'photos', 'history', 'notes']);
+
+    it('falls back to the Overview tab when the URL names an unknown tab', function () {
+        $car = Car::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', ['car' => $car, 'tab' => 'warranty']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('activeTab', 'overview'));
+    });
+});
+
+describe('equipment', function () {
+    it('offers the equipment catalogue in ten categories', function (string $routeName) {
+        $car = Car::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route($routeName, $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('equipmentCatalogue', 10)
+                ->where('equipmentCatalogue.0.label', 'Safety')
+                ->where('equipmentCatalogue.0.options.0', ['value' => 'abs', 'label' => 'Anti-lock brakes (ABS)'])
+                ->where('equipmentCatalogue.9.label', 'Performance')
+            );
+    })->with([
+        'on the add form' => 'cars.create',
+        'on the edit form' => 'cars.edit',
+    ]);
+
+    it('fills the edit form with the equipment of the car', function () {
+        $car = Car::factory()->create(['equipment' => ['abs', 'trailer_hitch']]);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.edit', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('car.equipment', ['abs', 'trailer_hitch']));
+    });
+
+    it('saves the checked equipment of a new car', function () {
+        $this->actingAs(User::factory()->create())
+            ->post(route('cars.store'), carFormPayload(['equipment' => ['abs', 'apple_carplay']]))
+            ->assertRedirect();
+
+        expect(Car::sole()->equipment)->toBe(['abs', 'apple_carplay']);
+    });
+
+    it('replaces the equipment of a car with the options checked in the edit form', function () {
+        $car = Car::factory()->create(['equipment' => ['abs', 'trailer_hitch']]);
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('cars.update', $car), carFormPayload(['equipment' => ['abs', 'heated_front_seats']]))
+            ->assertRedirect(route('cars.show', $car));
+
+        expect($car->refresh()->equipment)->toBe(['abs', 'heated_front_seats']);
+    });
+
+    it('removes all the equipment when every option is unchecked', function () {
+        $car = Car::factory()->create(['equipment' => ['abs', 'trailer_hitch']]);
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('cars.update', $car), carFormPayload(['equipment' => []]))
+            ->assertRedirect(route('cars.show', $car));
+
+        expect($car->refresh()->equipment)->toBe([]);
+    });
+
+    it('rejects equipment that is not valid', function (mixed $equipment, string $field, string $message) {
+        $car = Car::factory()->create(['equipment' => ['abs']]);
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('cars.update', $car), carFormPayload(['equipment' => $equipment]))
+            ->assertSessionHasErrors([$field => $message]);
+
+        expect($car->refresh()->equipment)->toBe(['abs']);
+    })->with([
+        'an option that is not in the catalogue' => [['abs', 'flux_capacitor'], 'equipment.1', 'The selected equipment option is invalid.'],
+        'the same option twice' => [['abs', 'abs'], 'equipment.0', 'The equipment option field has a duplicate value.'],
+        'a value that is not a list' => ['abs', 'equipment', 'The equipment field must be an array.'],
+    ]);
+
+    it('shows only the checked equipment, grouped by category', function () {
+        $car = Car::factory()->create(['equipment' => ['trailer_hitch', 'heated_front_seats', 'abs', 'blind_spot_monitoring']]);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('equipment', [
+                    ['category' => 'Safety', 'options' => ['Anti-lock brakes (ABS)', 'Blind-spot monitoring']],
+                    ['category' => 'Seating', 'options' => ['Heated front seats']],
+                    ['category' => 'Towing', 'options' => ['Trailer hitch']],
+                ])
+            );
+    });
+
+    it('shows no equipment for a car that has none recorded', function () {
+        $car = Car::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('equipment', []));
+    });
+});
+
+describe('history', function () {
+    it('records who changed the status from the car page', function () {
+        $car = Car::factory()->create();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->patch(route('cars.status.update', $car), ['status' => 'on_hold'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('car_status_changes', [
+            'car_id' => $car->id,
+            'user_id' => $user->id,
+            'from_status' => 'available',
+            'to_status' => 'on_hold',
+        ]);
+    });
+
+    it('records who changed the status from the edit form', function () {
+        $car = Car::factory()->create();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->put(route('cars.update', $car), carFormPayload(['status' => 'sold']))
+            ->assertRedirect(route('cars.show', $car));
+
+        $this->assertDatabaseHas('car_status_changes', [
+            'car_id' => $car->id,
+            'user_id' => $user->id,
+            'from_status' => 'available',
+            'to_status' => 'sold',
+        ]);
+    });
+
+    it('does not record a status change when the status is rejected', function () {
+        $car = Car::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->patch(route('cars.status.update', $car), ['status' => 'stolen'])
+            ->assertSessionHasErrors('status');
+
+        $this->assertDatabaseEmpty('car_status_changes');
+    });
+
+    it('shows the status changes of the car, most recent first', function () {
+        $car = Car::factory()->sold()->create();
+        $user = User::factory()->create(['name' => 'Camille Roy']);
+        CarStatusChange::factory()->for($car)->for($user)->create([
+            'from_status' => CarStatus::Available,
+            'to_status' => CarStatus::OnHold,
+            'created_at' => '2026-11-03 10:15:00',
+        ]);
+        CarStatusChange::factory()->for($car)->for($user)->create([
+            'from_status' => CarStatus::OnHold,
+            'to_status' => CarStatus::Sold,
+            'created_at' => '2026-11-08 16:45:00',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('cars.show', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('statusChanges', 2)
+                ->where('statusChanges.0.from', 'on_hold')
+                ->where('statusChanges.0.to', 'sold')
+                ->where('statusChanges.0.changed_at', '2026-11-08T16:45:00+00:00')
+                ->where('statusChanges.0.user', 'Camille Roy')
+                ->where('statusChanges.1.from', 'available')
+                ->where('statusChanges.1.to', 'on_hold')
+                ->where('statusChanges.1.changed_at', '2026-11-03T10:15:00+00:00')
+            );
+    });
+
+    it('does not show the status changes of another car', function () {
+        $car = Car::factory()->create();
+        CarStatusChange::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', $car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('statusChanges', []));
+    });
+
+    it('keeps a status change without a name once its user is deleted', function () {
+        $change = CarStatusChange::factory()->create();
+
+        $change->user->delete();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('cars.show', $change->car))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('statusChanges', 1)
+                ->where('statusChanges.0.user', null)
+            );
+    });
+
+    it('deletes the status changes of a car along with it', function () {
+        $change = CarStatusChange::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->delete(route('cars.destroy', $change->car))
+            ->assertRedirect(route('cars.index'));
+
+        $this->assertModelMissing($change);
     });
 });

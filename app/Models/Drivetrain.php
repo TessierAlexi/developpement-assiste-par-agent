@@ -7,6 +7,8 @@ namespace App\Models;
  */
 enum Drivetrain: string
 {
+    use OffersOptions;
+
     case FrontWheel = 'FWD';
     case RearWheel = 'RWD';
     case AllWheel = 'AWD';
@@ -23,18 +25,5 @@ enum Drivetrain: string
             self::AllWheel => 'All-wheel drive (AWD)',
             self::FourWheel => 'Four-wheel drive (4WD)',
         };
-    }
-
-    /**
-     * Get every drivetrain as a value and label pair, for select inputs.
-     *
-     * @return list<array{value: string, label: string}>
-     */
-    public static function options(): array
-    {
-        return array_map(
-            fn (self $drivetrain) => ['value' => $drivetrain->value, 'label' => $drivetrain->label()],
-            self::cases(),
-        );
     }
 }

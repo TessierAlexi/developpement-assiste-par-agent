@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\DB;
+
 /**
  * Business rules for adding, editing, selling and removing cars.
  *
@@ -12,6 +14,7 @@ class CarInventoryService
 {
     /**
      * Add a new car to the inventory; it starts out available unless another status is given.
+     * Its first status is not a change, so nothing goes into its history.
      *
      * @param  array<string, mixed>  $attributes
      */
@@ -21,7 +24,10 @@ class CarInventoryService
         $car->status = CarStatus::Available;
         $car->sold_on = null;
 
-        return $this->changeStatus($car, $status);
+        $this->applyStatus($car, $status);
+        $car->save();
+
+        return $car;
     }
 
     /**
@@ -29,17 +35,41 @@ class CarInventoryService
      *
      * @param  array<string, mixed>  $attributes
      */
-    public function update(Car $car, array $attributes, ?CarStatus $status = null): Car
+    public function update(Car $car, array $attributes, ?CarStatus $status = null, ?User $changedBy = null): Car
     {
         $car->fill($attributes);
 
-        return $this->changeStatus($car, $status ?? $car->status);
+        return $this->changeStatus($car, $status ?? $car->status, $changedBy);
     }
 
     /**
-     * Move a car to a new status, recording today as its sale date when it is sold.
+     * Move a car to a new status, recording today as its sale date when it is sold
+     * and adding the change, with the user who made it, to the car's history.
      */
-    public function changeStatus(Car $car, CarStatus $status): Car
+    public function changeStatus(Car $car, CarStatus $status, ?User $changedBy = null): Car
+    {
+        $previousStatus = $car->status;
+        $this->applyStatus($car, $status);
+
+        DB::transaction(function () use ($car, $previousStatus, $status, $changedBy) {
+            $car->save();
+
+            if ($previousStatus !== $status) {
+                $car->statusChanges()->create([
+                    'user_id' => $changedBy?->id,
+                    'from_status' => $previousStatus,
+                    'to_status' => $status,
+                ]);
+            }
+        });
+
+        return $car;
+    }
+
+    /**
+     * Set the status of a car and the sale date that goes with it, without saving.
+     */
+    protected function applyStatus(Car $car, CarStatus $status): void
     {
         $car->sold_on = match (true) {
             $status !== CarStatus::Sold => null,
@@ -47,9 +77,6 @@ class CarInventoryService
             default => today(),
         };
         $car->status = $status;
-        $car->save();
-
-        return $car;
     }
 
     /**

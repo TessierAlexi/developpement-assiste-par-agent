@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Car;
+use App\Models\CarEquipment;
 use App\Models\CarStatus;
 use App\Models\Drivetrain;
 use App\Models\Vin;
@@ -72,6 +73,8 @@ class CarRequest extends FormRequest
             'cost_price' => ['nullable', 'integer', 'min:0', 'max:10000000'],
             'description' => ['nullable', 'string', 'max:5000'],
             'internal_notes' => ['nullable', 'string', 'max:5000'],
+            'equipment' => ['array'],
+            'equipment.*' => ['string', 'distinct', Rule::in(CarEquipment::keys())],
             'photo_url' => ['nullable', 'url', 'max:2048'],
             'photo_source_url' => ['nullable', 'url', 'max:2048'],
             'photo_author' => ['nullable', 'string', 'max:255'],
@@ -93,6 +96,7 @@ class CarRequest extends FormRequest
             'engine_displacement_l' => 'engine displacement',
             'city_l_per_100km' => 'city consumption',
             'highway_l_per_100km' => 'highway consumption',
+            'equipment.*' => 'equipment option',
         ];
     }
 

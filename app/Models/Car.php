@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'stock_number', 'vin', 'received_on',
     'year', 'make', 'model', 'trim', 'body_type', 'doors', 'seats', 'colour', 'interior_colour',
     'engine', 'engine_displacement_l', 'cylinders', 'transmission', 'drivetrain', 'fuel_type',
     'city_l_per_100km', 'highway_l_per_100km',
-    'mileage_km', 'price', 'cost_price', 'description', 'internal_notes',
+    'mileage_km', 'price', 'cost_price', 'description', 'internal_notes', 'equipment',
     'photo_url', 'photo_source_url', 'photo_author', 'photo_licence', 'photo_licence_url', 'photo_attribution_required',
 ])]
 class Car extends Model
@@ -43,8 +44,19 @@ class Car extends Model
             'seats' => 'integer',
             'city_l_per_100km' => 'decimal:1',
             'highway_l_per_100km' => 'decimal:1',
+            'equipment' => 'array',
             'photo_attribution_required' => 'boolean',
         ];
+    }
+
+    /**
+     * Get the history of the car's status changes.
+     *
+     * @return HasMany<CarStatusChange, $this>
+     */
+    public function statusChanges(): HasMany
+    {
+        return $this->hasMany(CarStatusChange::class);
     }
 
     /**

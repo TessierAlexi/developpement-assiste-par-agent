@@ -41,3 +41,8 @@ export const formatDate = (isoDate) => {
 
     return dateFormatter.format(new Date(year, month - 1, day));
 };
+
+const dateTimeFormatter = new Intl.DateTimeFormat('en-CA', { dateStyle: 'medium', timeStyle: 'short' });
+
+export const formatDateTime = (isoTimestamp) =>
+    isMissing(isoTimestamp) ? MISSING : dateTimeFormatter.format(new Date(isoTimestamp));
