@@ -4,9 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Car;
 use App\Models\CarStatus;
+use App\Models\CarStatusChange;
+use App\Models\Drivetrain;
+use App\Models\User;
 use App\Models\WikipediaPhotos;
 use Carbon\CarbonInterface;
-use Database\Factories\CarFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -82,26 +84,136 @@ class CarSeeder extends Seeder
     ];
 
     /**
-     * Seed the car inventory, each car with a freely licensed photo of its model when there is one.
+     * Technical details of each make and model of the inventory, for the trim on the lot.
+     *
+     * Consumption is in L/100 km, or its equivalent (Le/100 km) for an electric car,
+     * which has neither displacement nor cylinders. The level is how well equipped
+     * the trim is ("base", "mid" or "top"); "extras" and "without" adjust the
+     * equipment that the level implies.
+     *
+     * @var array<string, array{engine: string, engine_displacement_l: ?float, cylinders: ?int, drivetrain: Drivetrain, doors: int, seats: int, city_l_per_100km: float, highway_l_per_100km: float, interior_colour: string, level: string, extras?: list<string>, without?: list<string>}>
+     */
+    protected const TECHNICAL_DETAILS = [
+        'Toyota Corolla' => ['engine' => '1.8L I4', 'engine_displacement_l' => 1.8, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 7.9, 'highway_l_per_100km' => 6.1, 'interior_colour' => 'Black cloth', 'level' => 'base'],
+        'Toyota RAV4' => ['engine' => '2.5L I4 Hybrid', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 5.8, 'highway_l_per_100km' => 6.3, 'interior_colour' => 'Black cloth', 'level' => 'mid'],
+        'Toyota Tacoma' => ['engine' => '3.5L V6', 'engine_displacement_l' => 3.5, 'cylinders' => 6, 'drivetrain' => Drivetrain::FourWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 13.0, 'highway_l_per_100km' => 10.5, 'interior_colour' => 'Black cloth', 'level' => 'mid', 'extras' => ['limited_slip_differential', 'drive_mode_selector', 'all_weather_floor_mats']],
+        'Toyota Camry' => ['engine' => '2.5L I4', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 8.6, 'highway_l_per_100km' => 6.1, 'interior_colour' => 'Black synthetic leather', 'level' => 'mid', 'extras' => ['sport_suspension', 'paddle_shifters']],
+        'Toyota Highlander' => ['engine' => '3.5L V6', 'engine_displacement_l' => 3.5, 'cylinders' => 6, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 8, 'city_l_per_100km' => 12.0, 'highway_l_per_100km' => 8.9, 'interior_colour' => 'Ash leather', 'level' => 'mid', 'extras' => ['sunroof', 'power_liftgate']],
+        'Toyota Prius' => ['engine' => '2.0L I4 Hybrid', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 5, 'seats' => 5, 'city_l_per_100km' => 4.8, 'highway_l_per_100km' => 4.7, 'interior_colour' => 'Black synthetic leather', 'level' => 'mid', 'extras' => ['heated_steering_wheel', 'wireless_charging']],
+        'Toyota Sienna' => ['engine' => '3.5L V6', 'engine_displacement_l' => 3.5, 'cylinders' => 6, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 8, 'city_l_per_100km' => 12.5, 'highway_l_per_100km' => 8.9, 'interior_colour' => 'Ash cloth', 'level' => 'base'],
+        'Honda Civic' => ['engine' => '1.5L Turbo I4', 'engine_displacement_l' => 1.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 5, 'seats' => 5, 'city_l_per_100km' => 8.5, 'highway_l_per_100km' => 6.3, 'interior_colour' => 'Black leather', 'level' => 'top'],
+        'Honda CR-V' => ['engine' => '1.5L Turbo I4', 'engine_displacement_l' => 1.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 8.7, 'highway_l_per_100km' => 7.4, 'interior_colour' => 'Black leather', 'level' => 'mid', 'extras' => ['sunroof', 'power_liftgate', 'heated_steering_wheel']],
+        'Honda Accord' => ['engine' => '2.0L I4 Hybrid', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 5.3, 'highway_l_per_100km' => 5.7, 'interior_colour' => 'Black leather', 'level' => 'top', 'extras' => ['ventilated_front_seats', 'head_up_display']],
+        'Honda Pilot' => ['engine' => '3.5L V6', 'engine_displacement_l' => 3.5, 'cylinders' => 6, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 7, 'city_l_per_100km' => 12.4, 'highway_l_per_100km' => 9.3, 'interior_colour' => 'Beige leather', 'level' => 'top', 'extras' => ['rear_seat_entertainment', 'trailer_hitch']],
+        'Honda HR-V' => ['engine' => '1.8L I4', 'engine_displacement_l' => 1.8, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 8.8, 'highway_l_per_100km' => 7.5, 'interior_colour' => 'Black cloth', 'level' => 'mid', 'extras' => ['sunroof']],
+        'Honda Odyssey' => ['engine' => '3.5L V6', 'engine_displacement_l' => 3.5, 'cylinders' => 6, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 8, 'city_l_per_100km' => 12.3, 'highway_l_per_100km' => 8.5, 'interior_colour' => 'Grey leather', 'level' => 'mid', 'extras' => ['sunroof', 'power_liftgate', 'backup_camera']],
+        'Ford F-150' => ['engine' => '3.5L Twin-Turbo V6', 'engine_displacement_l' => 3.5, 'cylinders' => 6, 'drivetrain' => Drivetrain::FourWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 13.1, 'highway_l_per_100km' => 10.2, 'interior_colour' => 'Black leather', 'level' => 'top', 'extras' => ['ventilated_front_seats', 'drive_mode_selector']],
+        'Ford Mustang' => ['engine' => '5.0L V8', 'engine_displacement_l' => 5.0, 'cylinders' => 8, 'drivetrain' => Drivetrain::RearWheel, 'doors' => 2, 'seats' => 4, 'city_l_per_100km' => 16.1, 'highway_l_per_100km' => 9.9, 'interior_colour' => 'Ebony leather', 'level' => 'top', 'extras' => ['limited_slip_differential', 'performance_brakes', 'sport_exhaust', 'sport_suspension', 'drive_mode_selector', 'ventilated_front_seats'], 'without' => ['sunroof', 'heated_rear_seats', 'wireless_charging']],
+        'Ford Escape' => ['engine' => '2.5L I4 Hybrid', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 5.5, 'highway_l_per_100km' => 6.4, 'interior_colour' => 'Ebony leather', 'level' => 'top', 'extras' => ['head_up_display']],
+        'Ford Bronco Sport' => ['engine' => '2.0L Turbo I4', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::FourWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 11.1, 'highway_l_per_100km' => 9.0, 'interior_colour' => 'Ebony cloth', 'level' => 'mid', 'extras' => ['drive_mode_selector', 'all_weather_floor_mats']],
+        'Ford Maverick' => ['engine' => '2.5L I4 Hybrid', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 5.6, 'highway_l_per_100km' => 7.1, 'interior_colour' => 'Navy cloth', 'level' => 'mid', 'without' => ['power_driver_seat', 'dual_zone_climate']],
+        'Ford Mustang Mach-E' => ['engine' => 'Dual electric motors', 'engine_displacement_l' => null, 'cylinders' => null, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 2.3, 'highway_l_per_100km' => 2.6, 'interior_colour' => 'Black synthetic leather', 'level' => 'top', 'extras' => ['panoramic_roof'], 'without' => ['sunroof']],
+        'Chevrolet Silverado 1500' => ['engine' => '5.3L V8', 'engine_displacement_l' => 5.3, 'cylinders' => 8, 'drivetrain' => Drivetrain::FourWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 15.1, 'highway_l_per_100km' => 11.7, 'interior_colour' => 'Jet Black cloth', 'level' => 'mid', 'extras' => ['all_weather_floor_mats', 'remote_start']],
+        'Chevrolet Bolt EV' => ['engine' => 'Electric motor', 'engine_displacement_l' => null, 'cylinders' => null, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 5, 'seats' => 5, 'city_l_per_100km' => 1.8, 'highway_l_per_100km' => 2.2, 'interior_colour' => 'Black leather', 'level' => 'mid', 'extras' => ['heated_steering_wheel', 'heated_rear_seats', 'wireless_charging', 'digital_instrument_cluster'], 'without' => ['fog_lights']],
+        'Chevrolet Equinox' => ['engine' => '1.5L Turbo I4', 'engine_displacement_l' => 1.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 9.6, 'highway_l_per_100km' => 8.0, 'interior_colour' => 'Jet Black cloth', 'level' => 'mid', 'extras' => ['remote_start', 'power_liftgate']],
+        'Chevrolet Cruze' => ['engine' => '1.4L Turbo I4', 'engine_displacement_l' => 1.4, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 8.0, 'highway_l_per_100km' => 5.8, 'interior_colour' => 'Jet Black cloth', 'level' => 'base', 'extras' => ['backup_camera', 'remote_start']],
+        'GMC Sierra 1500' => ['engine' => '5.3L V8', 'engine_displacement_l' => 5.3, 'cylinders' => 8, 'drivetrain' => Drivetrain::FourWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 15.0, 'highway_l_per_100km' => 11.8, 'interior_colour' => 'Jet Black leather', 'level' => 'top', 'extras' => ['head_up_display', 'all_weather_floor_mats']],
+        'Mazda MX-5' => ['engine' => '2.0L I4', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::RearWheel, 'doors' => 2, 'seats' => 2, 'city_l_per_100km' => 9.0, 'highway_l_per_100km' => 7.0, 'interior_colour' => 'Black cloth', 'level' => 'mid', 'extras' => ['limited_slip_differential', 'sport_suspension'], 'without' => ['power_driver_seat', 'dual_zone_climate']],
+        'Mazda CX-5' => ['engine' => '2.5L Turbo I4', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 10.8, 'highway_l_per_100km' => 8.7, 'interior_colour' => 'Cocoa Nappa leather', 'level' => 'top', 'extras' => ['ventilated_front_seats', 'head_up_display']],
+        'Mazda Mazda3 Sport' => ['engine' => '2.5L I4', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 5, 'seats' => 5, 'city_l_per_100km' => 9.0, 'highway_l_per_100km' => 6.8, 'interior_colour' => 'Black leather', 'level' => 'top', 'extras' => ['head_up_display', 'paddle_shifters'], 'without' => ['heated_rear_seats']],
+        'Mazda CX-30' => ['engine' => '2.5L Turbo I4', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 10.5, 'highway_l_per_100km' => 7.9, 'interior_colour' => 'Black leather', 'level' => 'top', 'extras' => ['head_up_display', 'paddle_shifters'], 'without' => ['heated_rear_seats']],
+        'Subaru Outback' => ['engine' => '2.4L Turbo H4', 'engine_displacement_l' => 2.4, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 5, 'seats' => 5, 'city_l_per_100km' => 10.9, 'highway_l_per_100km' => 9.2, 'interior_colour' => 'Grey synthetic leather', 'level' => 'mid', 'extras' => ['all_weather_floor_mats', 'drive_mode_selector', 'heated_rear_seats', 'heated_steering_wheel']],
+        'Subaru WRX' => ['engine' => '2.4L Turbo H4', 'engine_displacement_l' => 2.4, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 12.3, 'highway_l_per_100km' => 9.0, 'interior_colour' => 'Black suede', 'level' => 'top', 'extras' => ['limited_slip_differential', 'sport_suspension', 'drive_mode_selector'], 'without' => ['remote_start', 'wireless_charging']],
+        'Subaru Crosstrek' => ['engine' => '2.5L H4', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 8.8, 'highway_l_per_100km' => 7.0, 'interior_colour' => 'Grey synthetic leather', 'level' => 'mid', 'extras' => ['sunroof', 'wireless_charging']],
+        'Subaru Forester' => ['engine' => '2.5L H4', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 9.0, 'highway_l_per_100km' => 7.2, 'interior_colour' => 'Black cloth', 'level' => 'mid', 'extras' => ['panoramic_roof', 'power_liftgate']],
+        'Hyundai Elantra' => ['engine' => '2.0L I4', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 7.6, 'highway_l_per_100km' => 5.7, 'interior_colour' => 'Black cloth', 'level' => 'base', 'extras' => ['heated_front_seats', 'heated_steering_wheel']],
+        'Hyundai Ioniq 5' => ['engine' => 'Dual electric motors', 'engine_displacement_l' => null, 'cylinders' => null, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 2.1, 'highway_l_per_100km' => 2.6, 'interior_colour' => 'Black cloth', 'level' => 'mid', 'extras' => ['digital_instrument_cluster', 'navigation', 'heated_steering_wheel']],
+        'Hyundai Tucson' => ['engine' => '2.5L I4', 'engine_displacement_l' => 2.5, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 9.9, 'highway_l_per_100km' => 8.3, 'interior_colour' => 'Black leather and suede', 'level' => 'mid', 'extras' => ['panoramic_roof', 'power_liftgate', 'digital_instrument_cluster']],
+        'Hyundai Kona Electric' => ['engine' => 'Electric motor', 'engine_displacement_l' => null, 'cylinders' => null, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 1.8, 'highway_l_per_100km' => 2.2, 'interior_colour' => 'Black cloth', 'level' => 'base', 'extras' => ['heated_front_seats', 'alloy_wheels']],
+        'Kia Telluride' => ['engine' => '3.8L V6', 'engine_displacement_l' => 3.8, 'cylinders' => 6, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 7, 'city_l_per_100km' => 12.6, 'highway_l_per_100km' => 9.7, 'interior_colour' => 'Black Nappa leather', 'level' => 'top', 'extras' => ['ventilated_front_seats', 'head_up_display', 'trailer_hitch']],
+        'Kia Soul' => ['engine' => '2.0L I4', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 5, 'seats' => 5, 'city_l_per_100km' => 8.1, 'highway_l_per_100km' => 6.9, 'interior_colour' => 'Black cloth', 'level' => 'mid', 'extras' => ['sunroof', 'wireless_charging']],
+        'Kia EV6' => ['engine' => 'Dual electric motors', 'engine_displacement_l' => null, 'cylinders' => null, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 2.0, 'highway_l_per_100km' => 2.6, 'interior_colour' => 'Black synthetic leather', 'level' => 'top', 'extras' => ['ventilated_front_seats']],
+        'Kia Forte' => ['engine' => '2.0L I4', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 7.7, 'highway_l_per_100km' => 5.9, 'interior_colour' => 'Black cloth', 'level' => 'mid', 'extras' => ['sunroof']],
+        'Volkswagen Golf GTI' => ['engine' => '2.0L Turbo I4', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 5, 'seats' => 5, 'city_l_per_100km' => 9.8, 'highway_l_per_100km' => 7.3, 'interior_colour' => 'Titan Black leather', 'level' => 'top', 'extras' => ['limited_slip_differential', 'sport_suspension', 'drive_mode_selector', 'performance_brakes'], 'without' => ['remote_start']],
+        'Volkswagen Tiguan' => ['engine' => '2.0L Turbo I4', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 10.6, 'highway_l_per_100km' => 8.0, 'interior_colour' => 'Titan Black leatherette', 'level' => 'mid', 'extras' => ['panoramic_roof', 'power_liftgate']],
+        'Volkswagen Jetta' => ['engine' => '1.4L Turbo I4', 'engine_displacement_l' => 1.4, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 7.8, 'highway_l_per_100km' => 5.9, 'interior_colour' => 'Titan Black leatherette', 'level' => 'mid', 'extras' => ['sunroof', 'rain_sensing_wipers']],
+        'BMW 3 Series' => ['engine' => '2.0L Turbo I4', 'engine_displacement_l' => 2.0, 'cylinders' => 4, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 9.5, 'highway_l_per_100km' => 7.0, 'interior_colour' => 'Black synthetic leather', 'level' => 'top', 'extras' => ['paddle_shifters', 'drive_mode_selector'], 'without' => ['heated_rear_seats']],
+        'Tesla Model 3' => ['engine' => 'Dual electric motors', 'engine_displacement_l' => null, 'cylinders' => null, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 1.7, 'highway_l_per_100km' => 1.9, 'interior_colour' => 'Black synthetic leather', 'level' => 'top', 'extras' => ['panoramic_roof'], 'without' => ['apple_carplay', 'android_auto', 'satellite_radio', 'sunroof']],
+        'Tesla Model Y' => ['engine' => 'Dual electric motors', 'engine_displacement_l' => null, 'cylinders' => null, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 2.0, 'highway_l_per_100km' => 2.3, 'interior_colour' => 'Black and white synthetic leather', 'level' => 'top', 'extras' => ['panoramic_roof', 'performance_brakes', 'sport_suspension'], 'without' => ['apple_carplay', 'android_auto', 'satellite_radio', 'sunroof', 'roof_rails']],
+        'Jeep Wrangler Unlimited' => ['engine' => '3.6L V6', 'engine_displacement_l' => 3.6, 'cylinders' => 6, 'drivetrain' => Drivetrain::FourWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 13.8, 'highway_l_per_100km' => 10.1, 'interior_colour' => 'Black cloth', 'level' => 'mid', 'extras' => ['limited_slip_differential', 'all_weather_floor_mats', 'trailer_hitch', 'trailer_wiring_harness'], 'without' => ['roof_rails', 'cargo_cover', 'power_driver_seat', 'dual_zone_climate']],
+        'Nissan Rogue' => ['engine' => '1.5L Turbo I3', 'engine_displacement_l' => 1.5, 'cylinders' => 3, 'drivetrain' => Drivetrain::AllWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 8.4, 'highway_l_per_100km' => 6.7, 'interior_colour' => 'Charcoal cloth', 'level' => 'mid', 'extras' => ['panoramic_roof', 'remote_start']],
+        'Nissan Micra' => ['engine' => '1.6L I4', 'engine_displacement_l' => 1.6, 'cylinders' => 4, 'drivetrain' => Drivetrain::FrontWheel, 'doors' => 5, 'seats' => 5, 'city_l_per_100km' => 8.6, 'highway_l_per_100km' => 6.6, 'interior_colour' => 'Charcoal cloth', 'level' => 'base'],
+        'Ram 1500' => ['engine' => '5.7L V8', 'engine_displacement_l' => 5.7, 'cylinders' => 8, 'drivetrain' => Drivetrain::FourWheel, 'doors' => 4, 'seats' => 5, 'city_l_per_100km' => 15.7, 'highway_l_per_100km' => 11.0, 'interior_colour' => 'Diesel Grey cloth', 'level' => 'mid', 'extras' => ['remote_start', 'trailer_brake_controller']],
+    ];
+
+    /**
+     * Equipment that each level adds to the one below it, as keys of the CarEquipment catalogue.
+     *
+     * @var array<string, list<string>>
+     */
+    protected const EQUIPMENT_BY_LEVEL = [
+        'base' => ['abs', 'air_conditioning', 'keyless_entry', 'bluetooth', 'am_fm_radio', 'usb_audio_input', 'steering_wheel_audio_controls', 'daytime_running_lights', 'power_windows'],
+        'mid' => ['dual_zone_climate', 'push_button_start', 'satellite_radio', 'led_headlights', 'fog_lights', 'heated_front_seats', 'power_driver_seat', 'alloy_wheels', 'heated_mirrors', 'leather_steering_wheel'],
+        'top' => ['adaptive_cruise_control', 'heated_steering_wheel', 'remote_start', 'navigation', 'wireless_charging', 'digital_instrument_cluster', 'premium_sound_system', 'automatic_high_beams', 'led_taillights', 'ambient_interior_lighting', 'heated_rear_seats', 'driver_seat_memory', 'sunroof', 'rain_sensing_wipers', 'auto_dimming_mirror'],
+    ];
+
+    /**
+     * Equipment that only became common from MODERN_EQUIPMENT_SINCE on, by the level that brings it.
+     *
+     * @var array<string, list<string>>
+     */
+    protected const MODERN_EQUIPMENT_BY_LEVEL = [
+        'base' => ['backup_camera', 'apple_carplay', 'android_auto', 'automatic_headlights'],
+        'mid' => ['automatic_emergency_braking', 'blind_spot_monitoring', 'lane_keeping_assist', 'rear_cross_traffic_alert'],
+        'top' => [],
+    ];
+
+    /**
+     * First model year that gets the modern equipment.
+     */
+    protected const MODERN_EQUIPMENT_SINCE = 2018;
+
+    /**
+     * Number of most recent sales that are kept within the current month, so the dashboard has sales to show.
+     */
+    protected const SALES_KEPT_IN_CURRENT_MONTH = 3;
+
+    /**
+     * Seed the car inventory, each car with a freely licensed photo of its model when there is one,
+     * its technical details, its equipment, a cost price and the history behind its status.
      */
     public function run(WikipediaPhotos $wikipedia): void
     {
         $articles = array_values(array_unique(array_filter(array_column(self::INVENTORY, 'article'))));
         $photos = $wikipedia->forArticles($articles);
+        $salesperson = User::query()->oldest('id')->first();
+        $salesSeeded = 0;
 
         foreach (self::INVENTORY as $index => $vehicle) {
             $photo = $photos[$vehicle['article']] ?? null;
             $listedAt = now()->subHours($index * self::HOURS_BETWEEN_LISTINGS);
+            $details = self::TECHNICAL_DETAILS[$vehicle['make'].' '.$vehicle['model']];
+            $statusChanges = $this->statusChanges($vehicle['status'] ?? CarStatus::Available, $listedAt, $salesSeeded);
+            $soldAt = $statusChanges[CarStatus::Sold->value] ?? null;
 
             $factory = $photo === null ? Car::factory()->withoutPhoto() : Car::factory()->state($photo);
 
-            $this->withStatus($factory, $vehicle['status'] ?? CarStatus::Available, $listedAt)->create([
+            $car = $factory->create([
                 ...Arr::except($vehicle, ['article', 'status']),
+                ...Arr::except($details, ['level', 'extras', 'without']),
+                'equipment' => $this->equipment($vehicle, $details),
+                'cost_price' => $this->costPrice($vehicle['price'], $index),
+                'status' => $vehicle['status'] ?? CarStatus::Available,
+                'sold_on' => $soldAt?->toDateString(),
                 'stock_number' => sprintf('STK-%05d', 1001 + $index),
                 'received_on' => $listedAt->toDateString(),
                 'description' => array_key_exists('description', $vehicle) ? $vehicle['description'] : $this->describe($vehicle),
                 'created_at' => $listedAt,
             ]);
+
+            $this->recordStatusChanges($car, $statusChanges, $salesperson);
+
+            $salesSeeded += $soldAt === null ? 0 : 1;
         }
 
         if (count($photos) < count($articles)) {
@@ -110,15 +222,117 @@ class CarSeeder extends Seeder
     }
 
     /**
-     * Apply the status of a seeded car; a sold car was sold halfway between its listing and today.
+     * Get what the dealership paid for a car: 6 to 14 % under its asking price, to the nearest $50.
+     * The margin varies from one listing to the next; a car without an asking price has no cost price either.
      */
-    protected function withStatus(CarFactory $factory, CarStatus $status, CarbonInterface $listedAt): CarFactory
+    protected function costPrice(?int $price, int $index): ?int
     {
-        return match ($status) {
-            CarStatus::Available => $factory,
-            CarStatus::OnHold => $factory->onHold(),
-            CarStatus::Sold => $factory->sold($listedAt->copy()->addHours($listedAt->diffInHours(now()) / 2)->toDateString()),
-        };
+        if ($price === null) {
+            return null;
+        }
+
+        $marginInPercent = 6 + ($index * 5) % 9;
+
+        return (int) round($price * (100 - $marginInPercent) / 100 / 50) * 50;
+    }
+
+    /**
+     * Get the equipment of a vehicle: what its level and model year bring, what its body,
+     * engine, seats and upholstery imply, then its own extras and exceptions.
+     *
+     * @param  array{year: int, body_type: string}  $vehicle
+     * @param  array{engine: string, seats: int, interior_colour: string, level: string, extras?: list<string>, without?: list<string>}  $details
+     * @return list<string>
+     */
+    protected function equipment(array $vehicle, array $details): array
+    {
+        $allLevels = array_keys(self::EQUIPMENT_BY_LEVEL);
+        $levels = array_slice($allLevels, 0, array_search($details['level'], $allLevels, true) + 1);
+        $isAboveBase = $details['level'] !== 'base';
+        $isTop = $details['level'] === 'top';
+        $isPickup = $vehicle['body_type'] === 'Pickup';
+        $isUtility = in_array($vehicle['body_type'], ['SUV', 'Wagon'], true);
+
+        $implied = array_keys(array_filter([
+            'turbocharged_engine' => str_contains($details['engine'], 'Turbo'),
+            'leather_seats' => preg_match('/(?<!synthetic )leather\b/i', $details['interior_colour']) === 1,
+            'third_row_seating' => $details['seats'] >= 7,
+            'split_folding_rear_seat' => $details['seats'] > 2 && ! $isPickup,
+            'trailer_hitch' => $isPickup,
+            'trailer_wiring_harness' => $isPickup,
+            'trailer_sway_control' => $isPickup,
+            'tow_haul_mode' => $isPickup,
+            'tow_package' => $isPickup && $isAboveBase,
+            'trailer_brake_controller' => $isPickup && $isTop,
+            'roof_rails' => $isUtility && $isAboveBase,
+            'cargo_cover' => $isUtility && $isAboveBase,
+            'power_liftgate' => $isUtility && $isTop,
+        ]));
+
+        $equipment = [
+            ...Arr::flatten(Arr::only(self::EQUIPMENT_BY_LEVEL, $levels)),
+            ...($vehicle['year'] >= self::MODERN_EQUIPMENT_SINCE ? Arr::flatten(Arr::only(self::MODERN_EQUIPMENT_BY_LEVEL, $levels)) : []),
+            ...$implied,
+            ...($details['extras'] ?? []),
+        ];
+
+        return array_values(array_unique(array_diff($equipment, $details['without'] ?? [])));
+    }
+
+    /**
+     * Get when a car reached each status after "available", keyed by status value, oldest first.
+     *
+     * A car on hold was held two thirds of the way between its listing and today. A sold car
+     * was sold halfway, or at the start of the current month for the most recent sales when
+     * halfway falls before it; every other sale went through a hold first.
+     *
+     * @return array<string, CarbonInterface>
+     */
+    protected function statusChanges(CarStatus $status, CarbonInterface $listedAt, int $salesSeeded): array
+    {
+        $hoursListed = $listedAt->diffInHours(now());
+
+        if ($status === CarStatus::Available) {
+            return [];
+        }
+
+        if ($status === CarStatus::OnHold) {
+            return [CarStatus::OnHold->value => $listedAt->copy()->addHours($hoursListed * 2 / 3)];
+        }
+
+        $soldAt = $listedAt->copy()->addHours($hoursListed / 2);
+
+        if ($salesSeeded < self::SALES_KEPT_IN_CURRENT_MONTH) {
+            $soldAt = $soldAt->max(now()->startOfMonth()->addHours(10)->min(now()));
+        }
+
+        $heldAt = $listedAt->copy()->addHours($listedAt->diffInHours($soldAt) / 2);
+
+        return [
+            ...($salesSeeded % 2 === 0 ? [CarStatus::OnHold->value => $heldAt] : []),
+            CarStatus::Sold->value => $soldAt,
+        ];
+    }
+
+    /**
+     * Add the status changes of a car to its history, each one starting from the status before it.
+     *
+     * @param  array<string, CarbonInterface>  $statusChanges
+     */
+    protected function recordStatusChanges(Car $car, array $statusChanges, ?User $changedBy): void
+    {
+        $previousStatus = CarStatus::Available;
+
+        foreach ($statusChanges as $status => $changedAt) {
+            CarStatusChange::factory()->for($car)->create([
+                'user_id' => $changedBy?->id,
+                'from_status' => $previousStatus,
+                'to_status' => $status,
+                'created_at' => $changedAt,
+            ]);
+
+            $previousStatus = CarStatus::from($status);
+        }
     }
 
     /**
